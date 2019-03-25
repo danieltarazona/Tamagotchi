@@ -149,3 +149,5 @@ https://youtu.be/ayoofXuKqMY?t=1077
 
 ## Tamagotchi Original
 https://www.playr.org/play/tamagotchi/538
+
+Holiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii

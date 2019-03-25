@@ -2,7 +2,6 @@
 
 (require 2htdp/universe)
 (require 2htdp/image)
-;(require racket/draw)
 
 
 (define (create-UFO-scene height)
@@ -10,11 +9,22 @@
 
 (define title1 
 	(above (text "Tamagotchi" 97 "purple")
-          (bitmap "tamagotchi/src/img/panda.jpg")))
- 
-	
+          (bitmap "img/panda.jpg")
+          (overlay (rectangle 100 80 "outline" "black")(text "Play" 20 "red"))))
 
+(define (WorldChange w)
+  (cond
+    [(mouse-event=? "enter")(world-
+
+(define (click w mouse)
+  (cond
+   [(mouse-event=? "enter")
 
 (big-bang 0
-	(on-tick add1 60 1)
-	(to-draw create-UFO-scene 720 720))
+  (on-tick add1 60 1)
+  (define (
+  (to-draw create-UFO-scene 720 720))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  
