@@ -5,7 +5,11 @@
 
 
 (define (create-tamagotchi-scene height)
-  (underlay/xy (rectangle 720 720 "solid" "white") 100 height title1)
+  (underlay/xy (rectangle 720 720 "solid" "white") 100 100 title1)
+)
+
+(define (create-tamagotchi-scene2 height)
+  (underlay/xy (rectangle 720 720 "solid" "white") 100 100 title1)
 )
 
 (define title1
@@ -17,16 +21,21 @@
 
 
 (define (changeWorldMouse w x y me)
-  (cond [(mouse-event=? me 'left-down) (+ 1 w)]
-  )
+  (cond [(mouse-event? 'left-down) (- w 1)])
 )
 
+(define (frame w)(printf "~s" w))
 
 
-(big-bang 0
-  (on-tick add1)
+(big-bang 1
+  (on-tick frame 1680 1)
   (to-draw create-tamagotchi-scene 720 720)
   (on-mouse changeWorldMouse)
+  ;; Para propositos de prueba
+  (state #t)
+  
 )
+  
+
   
   
