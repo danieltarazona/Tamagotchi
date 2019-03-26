@@ -3,37 +3,56 @@
 (require 2htdp/universe)
 (require 2htdp/image)
 
-
-(define (create-tamagotchi-scene height)
-  (underlay/xy (rectangle 720 720 "solid" "white") 100 100 title1)
+(define (background)
+  (rectangle 720 720 "solid" "white")
 )
 
-(define (create-tamagotchi-scene2 height)
-  (underlay/xy (rectangle 720 720 "solid" "white") 100 100 title1)
+(define (worldIntro w)
+  (underlay/xy (background) 100 100 (interface1))
 )
 
-(define title1
+(define (worldMenu w)
+  (underlay/xy (background) 100 100 (interface2))
+)
+
+(define (interface1)
   (above (text "Tamagotchi" 97 "purple")
-         (bitmap "img/panda.jpg")
+         ;(bitmap "img/panda.jpg")
          (overlay (rectangle 100 80 "outline" "black")(text "Play" 20 "red"))
   )
 )
 
-
-(define (changeWorldMouse w x y me)
-  (cond [(mouse-event? 'left-down) (- w 1)])
+(define (interface2)
+  (above (overlay (rectangle 100 80 "outline" "black")(text "New Game" 20 "black"))
+         (overlay (rectangle 100 80 "outline" "black")(text "Continue" 20 "black"))
+  )
 )
 
-(define (frame w)(printf "~s" w))
+;(define (game w)
+;  (cond [ (> w 280) (worldMenu w) ]
+;        [ else (worldIntro w) ]
+;  )
+;)
 
+(define (game w)
+  (worldIntro w)
+)
 
-(big-bang 1
-  (on-tick frame 1680 1)
-  (to-draw create-tamagotchi-scene 720 720)
+(define (gameplay w)
+  (+ 1 w)
+)
+
+(define (changeWorldMouse w x y me)
+  (cond [(mouse-event? 'enter) (set! w 1680)]
+        [else w]
+  )
+)
+
+(big-bang 0
+  (on-tick gameplay)
+  (to-draw game 720 720)
   (on-mouse changeWorldMouse)
-  ;; Para propositos de prueba
-  (state #t)
-  
+  (state #t) 
 )
   
 
