@@ -3,26 +3,31 @@
 (require 2htdp/universe)
 (require 2htdp/image)
 
+;; Helper Functions
+(define (waitMinutes x)
+  (* 28 (* x 60))
+)
+
+(define (waitSeconds x)
+  (* x 28)
+)
+
 (define (background)
   (rectangle 720 720 "solid" "white")
 )
 
-(define (worldIntro w)
-  (underlay/xy (background) 100 100 (interface1))
+(define (render w interfaceX)
+  (underlay/xy (background) 100 100 (interfaceX))
 )
 
-(define (worldMenu w)
-  (underlay/xy (background) 100 100 (interface2))
-)
-
-(define (interface1)
+(define (intro)
   (above (text "Tamagotchi" 97 "purple")
          ;(bitmap "img/panda.jpg")
          (overlay (rectangle 100 80 "outline" "black")(text "Play" 20 "red"))
   )
 )
 
-(define (interface2)
+(define (menu)
   (above (overlay (rectangle 100 80 "outline" "black")(text "New Game" 20 "black"))
          (overlay (rectangle 100 80 "outline" "black")(text "Continue" 20 "black"))
   )
@@ -35,8 +40,9 @@
 ;)
 
 (define (game w)
-  (worldIntro w)
-)
+  (cond [(< w (waitSeconds 10))(render w intro)]
+        [else (render w menu)]
+))
 
 (define (gameplay w)
   (+ 1 w)
