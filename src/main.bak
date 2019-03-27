@@ -7,16 +7,12 @@
 ;;;;;;;;;; Helper Functions Interface ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (background w)
-  (underlay/xy (rectangle 720 720 "solid" "white") 650 10 (framerate w))
-)
-
-(define (framerate w)
-   (text (string-append "Frame " (number->string w)) 10 "black")
+(define (background)
+  (rectangle 720 720 "solid" "white")
 )
 
 (define (render w interfaceX)
-  (underlay/xy (background w) 100 100 (interfaceX))
+  (underlay/xy (background) 100 100 (interfaceX))
 )
 
 (define (clear)
@@ -55,8 +51,9 @@
 )
 
 (define (title)
-  (above (text "Tamagotchi" 100 "purple")
+  (above (text "Tamagotchi" 97 "purple")
          ;(bitmap "img/panda.jpg")
+         (overlay (rectangle 100 80 "outline" "black")(text "Play" 20 "red"))
   )
 )
 
@@ -73,12 +70,12 @@
   )
 )
 
-(define (frame w)
+(define (framerate w)
   (+ 1 w)
 )
 
 (define (mouseWorld w x y me)
-  (cond [(and (and (> w 560) (< w 840)) (equal? me "enter")) (render w intro)]
+  (cond [(and (> w 560) (equal? me "button-down")) (+ w 280)]
         ;[(equal? me "enter") (- w 560)]
         [else w] ;(+ w 1200)]
 ))
@@ -88,14 +85,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
-  (on-tick frame)
+  (on-tick framerate)
   (to-draw gameplay 720 720)
   (on-mouse mouseWorld)
+  
   ;(stop-when stop)
-<<<<<<< HEAD
   (state #t) 
 )
-=======
-  (state #f) 
-)
->>>>>>> cb2177aa1ef11bf93c7cc6ffdf9ea28bb1acf4c3
