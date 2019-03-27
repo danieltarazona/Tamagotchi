@@ -23,16 +23,16 @@
 ;;;;;;;;;; Timer Functions ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (waitSeconds w x)
-  (+ w (* x 28))
+(define (waitSeconds x)
+  (* x 28)
 )
 
-(define (waitMinutes w x)
-  (+ w (* 28 (* x 60)))
+(define (waitMinutes x)
+  (* 28 (* x 60))
 )
 
-(define (waitHours w x)
-  (+ w (* 24 (* 28 (* x 60))))
+(define (waitHours x)
+  (* 24 (* 28 (* x 60)))
 )
 
 (define (nextFrame w)
@@ -63,34 +63,29 @@
   )
 )
 
-(define (game w)
-  (cond [ (> w (waitSeconds w 5)) (render w menu) ]
-        [ else (render w intro) ]
+(define (gameplay w)
+  (cond [(and (> w 0) (< w (waitSeconds 10))) (render w intro) ]
+        [(and (> w (waitSeconds 10)) (< w (waitSeconds 20))) (render w title) ]
+        [ else (render w menu) ]
   )
 )
 
-(define (gameplay w)
+(define (framerate w)
   (+ 1 w)
 )
 
 (define (changeWorldMouse w x y me)
-  (cond [(mouse-event? 'enter) (set! w 0)]
-        [else w]
-  )
-)
+  (cond [(mouse-event? 'left-down) (0)]
+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Main ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
-  (on-tick gameplay)
-  (to-draw game 720 720)
+  (on-tick framerate)
+  (to-draw gameplay 720 720)
   ;(on-mouse changeWorldMouse)
   ;(stop-when stop)
   (state #t) 
 )
-  
-
-  
-  
