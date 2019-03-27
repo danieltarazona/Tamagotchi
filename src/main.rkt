@@ -2,6 +2,15 @@
 
 (require 2htdp/universe)
 (require 2htdp/image)
+(require racket/local)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Global Variables ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-struct size (height width))
+
+(define screen (make-size 720 720))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions Interface ;;;;;;;;;;
@@ -12,15 +21,11 @@
 )
 
 (define (framerate w)
-   (text (string-append "Frame " (number->string w)) 10 "black")
+   (text (string-append "FPS " (number->string w)) 10 "black")
 )
 
-(define (render w interfaceX)
-  (underlay/xy (background w) 100 100 (interfaceX))
-)
-
-(define (clear)
-  (nextFrame)
+(define (render w gui)
+  (underlay/xy (background w) 100 100 (gui))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,13 +44,22 @@
   (* 24 (* 28 (* x 60)))
 )
 
+(define (fps x)
+  (/ 1 x)
+)
+
+(define (timelapse w a b)
+  (cond [(and (and (> w a) (< w b))) #t]
+  )
+)
+
 (define (nextFrame w)
   (+ 1 w)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Interface ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; GUI ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (intro)
   (above (text "Valentina" 40 "purple")
@@ -56,31 +70,44 @@
 
 (define (title)
   (above (text "Tamagotchi" 100 "purple")
+         (text "Play" 40 "purple")
          ;(bitmap "img/panda.jpg")
   )
 )
 
 (define (menu)
-  (above (overlay (rectangle 100 80 "outline" "black")(text "New Game" 20 "black"))
-         (overlay (rectangle 100 80 "outline" "black")(text "Continue" 20 "black"))
+  (above (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "New Game" 20 "black"))
+         (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "Continue" 20 "black"))
+  )
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (engine w)
+  (define (start w)
+    (+ w 1)
+  )
+  (define (stop w)
+    (- w 1)
+  )
+  (cond [(and (> w 600) (< w 700)) (stop w)]
+        [else (start w)]
   )
 )
 
 (define (gameplay w)
-  (cond [(and (> w 0) (< w (waitSeconds 10))) (render w intro) ]
-        [(and (> w (waitSeconds 10)) (< w (waitSeconds 20))) (render w title) ]
-        [ else (render w menu) ]
+  (cond [(< w 300) (render w intro) ]
+        [(and (> w 300) (< w 600)) (render w title) ]
+        [else (render w menu)]
   )
 )
 
-(define (frame w)
-  (+ 1 w)
-)
-
-(define (mouseWorld w x y me)
-  (cond [(and (and (> w 560) (< w 840)) (equal? me "enter")) (render w intro)]
-        ;[(equal? me "enter") (- w 560)]
-        [else w] ;(+ w 1200)]
+(define (interactions w x y me)
+  (cond [(and (and (> w 600) (< w 700)) (equal? me "button-down")) 700]
+        ;[(equal? me "leave") 0]
+        [else w]
 ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,14 +115,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
-  (on-tick frame)
-  (to-draw gameplay 720 720)
-  (on-mouse mouseWorld)
+  (on-tick engine (fps 60))
+  (to-draw gameplay (size-width screen) (size-height screen))
+  (on-mouse interactions)
   ;(stop-when stop)
-<<<<<<< HEAD
-  (state #t) 
-)
-=======
   (state #f) 
 )
->>>>>>> cb2177aa1ef11bf93c7cc6ffdf9ea28bb1acf4c3
