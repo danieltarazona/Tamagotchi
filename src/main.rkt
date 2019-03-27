@@ -21,7 +21,9 @@
 )
 
 (define (framerate w)
-   (text (string-append "FPS " (number->string w)) 10 "black")
+   (above (text (string-append "Frame " (number->string w)) 10 "black")
+          (text "FPS 60" 10 "black")
+   )
 )
 
 (define (render w gui)
@@ -50,6 +52,7 @@
 
 (define (timelapse w a b)
   (cond [(and (and (> w a) (< w b))) #t]
+        [else #f]
   )
 )
 
@@ -92,20 +95,20 @@
   (define (stop w)
     (- w 1)
   )
-  (cond [(and (> w 600) (< w 700)) (stop w)]
+  (cond [(timelapse w 600 700) (stop w)]
         [else (start w)]
   )
 )
 
 (define (gameplay w)
   (cond [(< w 300) (render w intro) ]
-        [(and (> w 300) (< w 600)) (render w title) ]
+        [(timelapse w 300 600) (render w title) ]
         [else (render w menu)]
   )
 )
 
 (define (interactions w x y me)
-  (cond [(and (and (> w 600) (< w 700)) (equal? me "button-down")) 700]
+  (cond [(and (timelapse w 600 700) (equal? me "button-down")) 700]
         ;[(equal? me "leave") 0]
         [else w]
 ))
