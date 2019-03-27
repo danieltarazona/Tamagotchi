@@ -74,10 +74,8 @@
   (+ 1 w)
 )
 
-(define (mouseWorld w x y me)
-  (cond [(and (> w 560) (equal? me "button-down")) (+ w 280)]
-        ;[(equal? me "enter") (- w 560)]
-        [else w] ;(+ w 1200)]
+(define (changeWorldMouse w x y me)
+  (cond [(mouse-event? 'left-down) (0)]
 ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,8 +85,7 @@
 (big-bang 0
   (on-tick framerate)
   (to-draw gameplay 720 720)
-  (on-mouse mouseWorld)
-  
+  ;(on-mouse changeWorldMouse)
   ;(stop-when stop)
   (state #t) 
 )
