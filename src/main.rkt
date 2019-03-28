@@ -27,7 +27,7 @@
 (define (frame w)(printf "~s" w))
 
 
-(big-bang 1
+(big-bang 0
   (on-tick frame 1680 1)
   (to-draw create-tamagotchi-scene 720 720)
   (on-mouse changeWorldMouse)
