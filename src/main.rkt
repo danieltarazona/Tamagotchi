@@ -30,6 +30,10 @@
   (underlay/xy (background w) 100 100 (gui))
 )
 
+(define (mouse-x me)
+  (me)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Timer Functions ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,10 +58,6 @@
   (cond [(and (and (> w a) (< w b))) #t]
         [else #f]
   )
-)
-
-(define (nextFrame w)
-  (+ 1 w)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -89,19 +89,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (engine w)
+  
   (define (start w)
     (+ w 1)
   )
+  
   (define (stop w)
     (- w 1)
   )
-  (cond [(timelapse w 600 700) (stop w)]
+  
+  (define (goto w a)
+    (- w (- w a))
+  )
+  
+  (cond [(= w 200) (goto w 0)]
+        [(timelapse w 600 700) (stop w)]
         [else (start w)]
   )
 )
 
 (define (gameplay w)
-  (cond [(< w 300) (render w intro) ]
+  (cond [(timelapse w 0 300) (render w intro) ]
         [(timelapse w 300 600) (render w title) ]
         [else (render w menu)]
   )
@@ -122,5 +130,6 @@
   (to-draw gameplay (size-width screen) (size-height screen))
   (on-mouse interactions)
   ;(stop-when stop)
-  (state #f) 
+  (state #f)
+  (name "Tamagotchi")
 )
