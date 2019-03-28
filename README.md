@@ -38,6 +38,28 @@
 * Implementar una funcion que realice el cambio de pantalla
 * Implementar una funcion que asigne una tecla a un boton de accion de la interfaz
 
+# Frames Table
+
+| Nombre            | Tipo  | Duracion (s) | Frames | Frame Inicio | Frame Final |
+|-------------------|-------|--------------|--------|--------------|-------------|
+| Intro             | Start | 5            | 300    | 0            | 300         |
+| Titulo            | Start | 10           | 600    | 300          | 900         |
+| Menu              | Bucle | 60           | 3600   | 900          | 4500        |
+| Nombrar (Textbox) | Bucle | 60           | 3600   | 4500         | 8100        |
+| Nacer (Huevo)     | Start | 10           | 600    | 8100         | 8700        |
+| Bañar             | Start | 10           | 600    | 8700         | 9300        |
+| Escuchar          | Start | 10           | 600    | 9300         | 9900        |
+| Curar             | Start | 10           | 600    | 9900         | 10500       |
+| Jugar             | Start | 30           | 1800   | 10500        | 12300       |
+| Comer             | Start | 10           | 600    | 12300        | 12900       |
+| Morir             | Start | 10           | 600    | 12900        | 13500       |
+| Idle Normal       | Bucle | 30           | 1800   | 13500        | 15300       |
+| Idle Happy        | Bucle | 30           | 1800   | 15300        | 17100       |
+| Idle Sad          | Bucle | 30           | 1800   | 17100        | 18900       |
+| Idle Dirty        | Bucle | 30           | 1800   | 18900        | 20700       |
+| Idle Sick         | Bucle | 30           | 1800   | 20700        | 22500       |
+| Idle Ded          | Bucle | 30           | 1800   | 22500        | 24300       |
+
 # Resources
 
 ## Universe
