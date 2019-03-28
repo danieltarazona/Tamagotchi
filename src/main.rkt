@@ -85,7 +85,7 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (engine w)
@@ -108,12 +108,20 @@
   )
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (gameplay w)
   (cond [(timelapse w 0 300) (render w intro) ]
         [(timelapse w 300 600) (render w title) ]
         [else (render w menu)]
   )
 )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Event Handlers ;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (interactions w x y me)
   (cond [(and (timelapse w 600 700) (equal? me "button-down")) 700]
@@ -131,5 +139,5 @@
   (on-mouse interactions)
   ;(stop-when stop)
   (state #f)
-  (name "Tamagotchi")
+  (name "PandaSushi")
 )

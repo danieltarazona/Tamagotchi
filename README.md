@@ -1,24 +1,15 @@
 # Tamagotchi
 
-# ToDo
-Determinar las condiciones de cambio entre estados
-Leer sobre las maquinas de estado en Racket en el apartado 2.4.4.1
-https://docs.racket-lang.org/teachpack/2htdpuniverse.html
-Podemos usar Pixel-Art para todo el juego convirtiendo imagenes de vectores en pixeles, le da un estilo retro
+## ToDo
 
-## Interfaz
-* Implementar una funcion que dibuja una ventana de tamaño 720x720
+### Interfaz
 * Implementar una funcion que dibuja el puntero al interior de la ventana anterior
+* Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
 * Implementar el boton stop para cerrar el programa
 * Implementar dos botones uno para un nuevo juego y otro para un juego previo
-* Implementar una funcion que crea un boton con un texto X en una posn(x,y)
 * Funcion reutilizable de movimiento en el eje X por segundo de un objeto
 * Funcion reutilizable de movimiento en el eje Y por segundo de un objeto
 * Implementar una funcion que dibuja una barra de estado, con nombre X y con valor actual de llenado Y y total posible de llenado Z, mostrar el nombre de la barra debajo de si misma o encima
-* Implementar una funcion que muestra una pequeña ventana emergente al iniciar un nuevo juego
-* Implementar una pantalla onboard con el nombre del juego
-* Implementar una funcion que dibuja el menu principal con el titulo en la parte superior
-* Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
 * Implementar una funcion que dibuja el fondo del escenario de juego
 * Implementar una funcion que dibuja el tamago
 * Implementar una funcion que al hacer click mas rápidamente abra el tamago
@@ -36,7 +27,7 @@ Podemos usar Pixel-Art para todo el juego convirtiendo imagenes de vectores en p
 * Implemenrar una funcion que dibuja una lapida
 * Implementar una funcion que dibuja un boton de regresar al menu
 
-## Logica
+### Logica
 * Implementar Big-bang para determinar el comportamiento de la ventana del juego y del programa en si
 * Implementar la funcion stop ejecutada por el boton
 * Implementar una funcion que guarda en texto plano las condiciones actuales de nuestro tamago
