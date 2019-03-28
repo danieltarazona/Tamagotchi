@@ -1,24 +1,15 @@
 # Tamagotchi
 
-# ToDo
-Determinar las condiciones de cambio entre estados
-Leer sobre las maquinas de estado en Racket en el apartado 2.4.4.1
-https://docs.racket-lang.org/teachpack/2htdpuniverse.html
-Podemos usar Pixel-Art para todo el juego convirtiendo imagenes de vectores en pixeles, le da un estilo retro
+## ToDo
 
-## Interfaz
-* Implementar una funcion que dibuja una ventana de tamaño 720x720
+### Interfaz
 * Implementar una funcion que dibuja el puntero al interior de la ventana anterior
+* Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
 * Implementar el boton stop para cerrar el programa
 * Implementar dos botones uno para un nuevo juego y otro para un juego previo
-* Implementar una funcion que crea un boton con un texto X en una posn(x,y)
 * Funcion reutilizable de movimiento en el eje X por segundo de un objeto
 * Funcion reutilizable de movimiento en el eje Y por segundo de un objeto
 * Implementar una funcion que dibuja una barra de estado, con nombre X y con valor actual de llenado Y y total posible de llenado Z, mostrar el nombre de la barra debajo de si misma o encima
-* Implementar una funcion que muestra una pequeña ventana emergente al iniciar un nuevo juego
-* Implementar una pantalla onboard con el nombre del juego
-* Implementar una funcion que dibuja el menu principal con el titulo en la parte superior
-* Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
 * Implementar una funcion que dibuja el fondo del escenario de juego
 * Implementar una funcion que dibuja el tamago
 * Implementar una funcion que al hacer click mas rápidamente abra el tamago
@@ -36,7 +27,7 @@ Podemos usar Pixel-Art para todo el juego convirtiendo imagenes de vectores en p
 * Implemenrar una funcion que dibuja una lapida
 * Implementar una funcion que dibuja un boton de regresar al menu
 
-## Logica
+### Logica
 * Implementar Big-bang para determinar el comportamiento de la ventana del juego y del programa en si
 * Implementar la funcion stop ejecutada por el boton
 * Implementar una funcion que guarda en texto plano las condiciones actuales de nuestro tamago
@@ -46,6 +37,28 @@ Podemos usar Pixel-Art para todo el juego convirtiendo imagenes de vectores en p
 * Implementar un funcion que realice el cambio de estado del tamago usando set!
 * Implementar una funcion que realice el cambio de pantalla
 * Implementar una funcion que asigne una tecla a un boton de accion de la interfaz
+
+# Frames Table
+
+| Nombre            | Tipo  | Duracion (s) | Frames | Frame Inicio | Frame Final |
+|-------------------|-------|--------------|--------|--------------|-------------|
+| Intro             | Start | 5            | 300    | 0            | 300         |
+| Titulo            | Start | 10           | 600    | 300          | 900         |
+| Menu              | Bucle | 60           | 3600   | 900          | 4500        |
+| Nombrar (Textbox) | Bucle | 60           | 3600   | 4500         | 8100        |
+| Nacer (Huevo)     | Start | 10           | 600    | 8100         | 8700        |
+| Bañar             | Start | 10           | 600    | 8700         | 9300        |
+| Escuchar          | Start | 10           | 600    | 9300         | 9900        |
+| Curar             | Start | 10           | 600    | 9900         | 10500       |
+| Jugar             | Start | 30           | 1800   | 10500        | 12300       |
+| Comer             | Start | 10           | 600    | 12300        | 12900       |
+| Morir             | Start | 10           | 600    | 12900        | 13500       |
+| Idle Normal       | Bucle | 30           | 1800   | 13500        | 15300       |
+| Idle Happy        | Bucle | 30           | 1800   | 15300        | 17100       |
+| Idle Sad          | Bucle | 30           | 1800   | 17100        | 18900       |
+| Idle Dirty        | Bucle | 30           | 1800   | 18900        | 20700       |
+| Idle Sick         | Bucle | 30           | 1800   | 20700        | 22500       |
+| Idle Ded          | Bucle | 30           | 1800   | 22500        | 24300       |
 
 # Resources
 
