@@ -102,9 +102,9 @@
 
 (define (ponNombre)                                              
   (begin
-         (above(printf "digite nombre de su mascota: ")
+         (above(printf "Digite nombre de su mascota: ")
          (set! nombre (read))
-         (set! imagen (bitmap "img/panda.jpg"))
+         ;(set! imagen (bitmap "img/panda.jpg"))
          )
 
    )
