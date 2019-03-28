@@ -30,4 +30,4 @@
 ;              -1 felicidad
 ;              +1 salud
 
-;nivelBano : +2 higiene 
+;nivelBano :   +2 higiene 
