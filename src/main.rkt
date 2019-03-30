@@ -14,6 +14,8 @@
 (define totalFrames 30000)
 (define assets "assets/")
 (define actualState "Main")
+(define initialFrame 0)
+(define finalFrame 120)
 
 (define debug #t)
 (define showFrames #t)
@@ -27,6 +29,8 @@
 
 (define-struct sprite (name [path #:mutable] frames ext) #:transparent)
 (define idleState (make-sprite "idle" "" 120 ".png"))
+
+(define-struct gui (name frames ui) #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
@@ -59,6 +63,8 @@
          (if showFPS
              (text (string-append "FPS: " (number->string fps)) 10 "black")
                 (text "" 10 "black"))
+         (text (string-append "InitialFrame: " (number->string initialFrame)) 10 "black")
+         (text (string-append "FinalFrame: " (number->string finalFrame)) 10 "black")
   )         
 )
 
@@ -90,60 +96,63 @@
 )
 
 (define (timelapse w a b)
-  (cond [(and (and (>= w a) (<= w b))) #t]
+  (cond [(and (and (>= w a) (< w b))) #t]
         [else #f]
   )
+)
+
+(define (goto w a)
+   (- w (- w a))
+)
+
+(define (start w)
+   (+ w 1)
+)
+  
+(define (stop w)
+   (- w 1)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
 (define (engine w)
-
-  (define (start w)
-    (+ w 1)
-  )
   
-  (define (stop w)
-    (- w 1)
-  )
+  (start w)
   
-  (define (goto w a)
-    (- w (- w a))
-  )
-  
-  (cond [(= w 200) (goto w 0)]
-        [(timelapse w 600 700) (stop w)]
-        [else (start w)]
-  )
+  ;(cond [(= w 200) (goto w 0)]
+  ;      [(timelapse w 600 700) (stop w)]
+  ;      [else (start w)]
+  ;)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; GUI ;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (intro)
+(define (introUI)
   (above (text "Valentina" 40 "purple")
          (text "Santiago" 40 "purple")
          (text "Daniel" 40 "purple")
   )
 )
 
-(define (title)
+(define (titleUI)
   (above (text "Tamagotchi" 100 "purple")
          (text "Play" 40 "purple")
-         ;(bitmap "img/panda.jpg")
   )
 )
 
-(define (menu)
+(define (menuUI)
   (above (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "New Game" 20 "black"))
          (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "Continue" 20 "black"))
   )
 )
+
+(define intro (make-gui "intro" 120 (introUI)))
+(define title (make-gui "title" 120 (titleUI)))
+(define menu (make-gui "menu" 120 (menuUI)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -166,9 +175,11 @@
   )
 )
 
-(define (render w gui)
-  (set! actualState "GUI")
-  (underlay/xy (background w) 100 100 (gui))
+(define (renderGUI w ui)
+  (cond [(gui? ui) 
+     (set! actualState "GUI")
+     (underlay/xy (background w) 100 100 (gui-ui ui))
+  ])
 )
 
 (define (spritePath sprite)
@@ -179,12 +190,18 @@
 
 (define (spriteDraw w sprite)
   (set-sprite-path! sprite (spritePath sprite))
-  (sprite-path sprite)
   (set! actualState (string-append "Sprite "(sprite-name sprite)))
   (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
             (bitmap/file (string-append (sprite-path sprite) (number->string w) (sprite-ext sprite)))
         ]
   )
+  (cond [(= w 1)(set! initialFrame w)])
+)
+
+(define (setSplitFrame w ui)
+   (cond [(sprite? ui) (set! finalFrame (+ w (sprite-frames ui))) ]
+         [(gui? ui) (set! finalFrame (+ w (gui-frames ui))) ]
+   )
 )
 
 (define (renderSprite w sprite)
@@ -201,16 +218,28 @@
         [else w]
 ))
 
+(define (change w keypress)
+  (cond
+    [(key=? keypress "left") initialFrame]
+    [(key=? keypress "right") finalFrame]
+    [else w]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (play w x y ui)
+   (setSplitFrame w ui)
+   (cond [(and (gui? ui) (timelapse w x y)) (renderGUI w ui)]
+         [(and (sprite? ui) (timelapse w x y)) (renderSprite w ui)]
+         [else (renderGUI w menu)]
+   )
+)
+
 (define (gameplay w)
-  (cond ;[(timelapse w 0 300) (render w intro) ]
-        [(timelapse w 0 120) (renderSprite w idleState) ]
-        [(timelapse w 120 200) (render w title) ]
-        [else (render w menu)]
-  )
+   (play w 0 120 intro)
+   (play w 120 240 title)
+   ;(play w 240 360 menu)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -221,6 +250,7 @@
   (on-tick engine (framerate))
   (to-draw gameplay (size-width screen) (size-height screen))
   (on-mouse interactions)
+  (on-key change)
   ;(stop-when stop)
   (state #f)
   (name "PandaSushi")
