@@ -4,30 +4,28 @@
 (require 2htdp/image)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Global Variables ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Global Variables ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-struct size (height width))
-
 (define screen (make-size 720 720))
-
 (define fps 60)
-
 (define assets "assets/")
-
-(define debug #t)
-
 (define actualState "")
 
+(define debug #t)
 (define showFrames #t)
 (define showFPS #f)
 (define showActualState #t)
 (define showTimeline #t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-struct sprite (name [path #:mutable] frames ext) #:transparent)
 (define idleState (make-sprite "idle" "" 120 ".png"))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
@@ -87,7 +85,7 @@
 )
 
 (define (timelapse w a b)
-  (cond [(and (and (> w a) (< w b))) #t]
+  (cond [(and (and (>= w a) (<= w b))) #t]
         [else #f]
   )
 )
@@ -191,8 +189,9 @@
 
 (define (gameplay w)
   (cond ;[(timelapse w 0 300) (render w intro) ]
+        [(timelapse w 1 120) (renderSprite w idleState) ]
         [(timelapse w 0 120) (renderSprite w idleState) ]
-        [(timelapse w 120 600) (render w title) ]
+        [(timelapse w 120 200) (render w title) ]
         [else (render w menu)]
   )
 )
