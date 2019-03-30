@@ -2,7 +2,7 @@
 
 (require 2htdp/universe)
 (require 2htdp/image)
-(require racket/local)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global Variables ;;;;;;;;;;
@@ -12,31 +12,17 @@
 
 (define screen (make-size 720 720))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Helper Functions Interface ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (background w)
-  (underlay/xy (rectangle 720 720 "solid" "white") 650 10 (framerate w))
-)
+; (current-directory)
 
-(define (framerate w)
-   (above (text (string-append "Frame " (number->string w)) 10 "black")
-          (text "FPS 60" 10 "black")
-   )
-)
 
-(define (render w gui)
-  (underlay/xy (background w) 100 100 (gui))
-)
 
-(define (mouse-x me)
-  (me)
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Timer Functions ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions Engine ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (waitSeconds x)
   (* x 28)
@@ -57,6 +43,30 @@
 (define (timelapse w a b)
   (cond [(and (and (> w a) (< w b))) #t]
         [else #f]
+  )
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (engine w)
+
+  (define (start w)
+    (+ w 1)
+  )
+  
+  (define (stop w)
+    (- w 1)
+  )
+  
+  (define (goto w a)
+    (- w (- w a))
+  )
+  
+  (cond [(= w 200) (goto w 0)]
+        [(timelapse w 600 700) (stop w)]
+        [else (start w)]
   )
 )
 
@@ -84,49 +94,54 @@
   )
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-<<<<<<< HEAD
-(big-bang 0
-  (on-tick frame 1680 1)
-  (to-draw create-tamagotchi-scene 720 720)
-  (on-mouse changeWorldMouse)
-  ;; Para propositos de prueba
-  (state #t)
-=======
-(define (engine w)
->>>>>>> f98b51be3222da8cc9b76587041d137c94a89f4a
-  
-  (define (start w)
-    (+ w 1)
-  )
-  
-  (define (stop w)
-    (- w 1)
-  )
-  
-  (define (goto w a)
-    (- w (- w a))
-  )
-  
-  (cond [(= w 200) (goto w 0)]
-        [(timelapse w 600 700) (stop w)]
-        [else (start w)]
+(define (background w)
+  (underlay/xy (rectangle 720 720 "solid" "white") 650 10 (framerate w))
+)
+
+(define (framerate w)
+   (above (text (string-append "Frame " (number->string w)) 10 "black")
+          (text "FPS 60" 10 "black")
+   )
+)
+
+(define (render w gui)
+  (underlay/xy (background w) 100 100 (gui))
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions Sprites ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define assets "assets/")
+
+(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
+
+(define idleState (make-sprite "idle" "" 120 ".png"))
+
+(define (spritePath sprite)
+  ;(lambda (w i) (+ w (- w w) 1) w 1)
+  (cond [(sprite? sprite)
+            (string-append assets "sprites/" (sprite-name sprite) "/")]
   )
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (gameplay w)
-  (cond [(timelapse w 0 300) (render w intro) ]
-        [(timelapse w 300 600) (render w title) ]
-        [else (render w menu)]
-  )
+(define (spriteDraw w sprite)
+  (set-sprite-path! sprite (spritePath sprite))
+  (sprite-path sprite)
+  (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
+            (bitmap/file (string-append (sprite-path sprite) (number->string w) (sprite-ext sprite)))
+        ]
+  )  
 )
+
+(define (renderSprite w sprite)
+   (underlay/xy (background w) 100 100 (spriteDraw w sprite))
+)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Event Handlers ;;;;;;;;;;;;;;
@@ -138,8 +153,20 @@
         [else w]
 ))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (gameplay w)
+  (cond ;[(timelapse w 0 300) (render w intro) ]
+        [(timelapse w 0 300) (renderSprite w idleState) ]
+        [(timelapse w 300 600) (render w title) ]
+        [else (render w menu)]
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Main ;;;;;;;;;;;;;;
+;;;;;;;;;; MAIN ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
