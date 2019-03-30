@@ -189,7 +189,6 @@
 
 (define (gameplay w)
   (cond ;[(timelapse w 0 300) (render w intro) ]
-        [(timelapse w 1 120) (renderSprite w idleState) ]
         [(timelapse w 0 120) (renderSprite w idleState) ]
         [(timelapse w 120 200) (render w title) ]
         [else (render w menu)]

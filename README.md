@@ -8,6 +8,7 @@
 * Panda comiendo Ramen
 
 ### Interfaz
+* Implementar una funcion que muestra la notificacion como nube del estado actual del Panda
 * Implementar una funcion que dibuja el puntero al interior de la ventana anterior
 * Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
 * Implementar el boton stop para cerrar el programa
