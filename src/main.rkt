@@ -51,13 +51,13 @@
 (define (debugTools w)
   
   (above (if showFrames
-             (text (string-append "Frame " (number->string w)) 10 "black")
-                (text "" 10 "black"))
-         (if showFPS
-             (text (string-append "FPS " (number->string fps)) 10 "black")
+             (text (string-append "FRAME: " (number->string w)) 12 "black")
                 (text "" 10 "black"))
          (if showActualState
-             (text (string-append "State " actualState) 10 "black")
+             (text (string-append "STATE: " actualState) 12 "black")
+                (text "" 10 "black"))
+         (if showFPS
+             (text (string-append "FPS: " (number->string fps)) 10 "black")
                 (text "" 10 "black"))
   )         
 )
@@ -150,12 +150,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (background w)
+  (cond [(equal? debug #t)
   (underlay/xy
      (underlay/xy
+        (underlay/xy
         (rectangle (size-width screen) (size-height screen) "solid" "white") 620 10 (debugTools w)
      )
-      0 720
-     (rectangle 720 20 "outline" "black"))
+      0 408
+     (rectangle 756 20 "outline" "black"))
+     (+ w 1) 395
+     (isosceles-triangle 15 -30 "solid" "red"))
+     
+  ]
+  [else (rectangle (size-width screen) (size-height screen) "solid" "white")]
+  )
 )
 
 (define (render w gui)
