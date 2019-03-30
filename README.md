@@ -2,6 +2,11 @@
 
 ## ToDo
 
+## Animation
+* Panda comiendo Sushi
+* Panda comiendo Bambu
+* Panda comiendo Ramen
+
 ### Interfaz
 * Implementar una funcion que dibuja el puntero al interior de la ventana anterior
 * Implementar una pantalla despues de selecionar nuevo juego para ingresar el nombre de nuestro tamago
@@ -157,8 +162,12 @@ https://docs.racket-lang.org/teachpack/2htdpuniverse.html
 ## Racket Image
 https://docs.racket-lang.org/teachpack/2htdpimage.html
 
+## Racket Structs Transparent and Mutable 
+https://docs.racket-lang.org/guide/define-struct.html#%28tech._transparent%29
+
 ## Racket Textbox
 https://youtu.be/ayoofXuKqMY?t=1077
 
 ## Tamagotchi Original
 https://www.playr.org/play/tamagotchi/538
+

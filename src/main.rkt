@@ -12,13 +12,59 @@
 
 (define screen (make-size 720 720))
 
+(define fps 60)
+
+(define assets "assets/")
+
+(define debug #t)
+
+(define actualState "")
+
+(define showFrames #t)
+(define showFPS #f)
+(define showActualState #t)
+(define showTimeline #t)
+
+(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
+(define idleState (make-sprite "idle" "" 120 ".png"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (setTrueFPS)
+   (set! showFPS #t)
+)
+
+(define (setFalseFPS)
+   (set! showFPS #f)
+)
+
+(define (setTrueTimeline)
+   (set! showTimeline #t)
+)
+
+(define (setFalseTimeline)
+   (set! showTimeline #f)
+)
+
+(define (debugTools w)
+  (above (if showFrames
+             (text (string-append "Frame " (number->string w)) 10 "black") (text "" 10 "black"))
+         (if showFPS
+             (text (string-append "FPS " (number->string fps)) 10 "black") (text "" 10 "black"))
+         (if showActualState
+             (text (string-append "State " actualState) 10 "black") (text "" 10 "black"))
+  )
+)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; (current-directory)
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions Engine ;;;;;;;;;;
@@ -36,8 +82,8 @@
   (* 24 (* 28 (* x 60)))
 )
 
-(define (fps x)
-  (/ 1 x)
+(define (framerate)
+  (/ 1 fps)
 )
 
 (define (timelapse w a b)
@@ -49,6 +95,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 (define (engine w)
 
@@ -99,31 +147,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (background w)
-  (underlay/xy (rectangle 720 720 "solid" "white") 650 10 (framerate w))
-)
-
-(define (framerate w)
-   (above (text (string-append "Frame " (number->string w)) 10 "black")
-          (text "FPS 60" 10 "black")
-   )
+  (underlay/xy (rectangle 720 720 "solid" "white") 620 10 (debugTools w))
 )
 
 (define (render w gui)
+  (set! actualState "GUI")
   (underlay/xy (background w) 100 100 (gui))
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Helper Functions Sprites ;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define assets "assets/")
-
-(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
-
-(define idleState (make-sprite "idle" "" 120 ".png"))
-
 (define (spritePath sprite)
-  ;(lambda (w i) (+ w (- w w) 1) w 1)
   (cond [(sprite? sprite)
             (string-append assets "sprites/" (sprite-name sprite) "/")]
   )
@@ -132,16 +164,16 @@
 (define (spriteDraw w sprite)
   (set-sprite-path! sprite (spritePath sprite))
   (sprite-path sprite)
+  (set! actualState (string-append "Sprite "(sprite-name sprite)))
   (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
             (bitmap/file (string-append (sprite-path sprite) (number->string w) (sprite-ext sprite)))
         ]
-  )  
+  )
 )
 
 (define (renderSprite w sprite)
    (underlay/xy (background w) 100 100 (spriteDraw w sprite))
 )
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Event Handlers ;;;;;;;;;;;;;;
@@ -159,8 +191,8 @@
 
 (define (gameplay w)
   (cond ;[(timelapse w 0 300) (render w intro) ]
-        [(timelapse w 0 300) (renderSprite w idleState) ]
-        [(timelapse w 300 600) (render w title) ]
+        [(timelapse w 0 120) (renderSprite w idleState) ]
+        [(timelapse w 120 600) (render w title) ]
         [else (render w menu)]
   )
 )
@@ -170,7 +202,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
-  (on-tick engine (fps 60))
+  (on-tick engine (framerate))
   (to-draw gameplay (size-width screen) (size-height screen))
   (on-mouse interactions)
   ;(stop-when stop)

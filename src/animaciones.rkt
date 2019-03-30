@@ -5,7 +5,6 @@
 
 (define imagen 0)
 
-
 (define (eat)  
   (set! image (animacion-eat)) ;cada vez que el usuario presione la tecla destinada para comer, mostrara esta animacion
 )
