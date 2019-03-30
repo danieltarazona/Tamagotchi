@@ -9,14 +9,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-struct size (height width))
-(define screen (make-size 720 720))
+(define screen (make-size 432 768)) ;True 16:9
 (define fps 60)
+(define totalFrames 30000)
 (define assets "assets/")
-(define actualState "")
+(define actualState "Main")
 
 (define debug #t)
 (define showFrames #t)
-(define showFPS #f)
+(define showFPS #t)
 (define showActualState #t)
 (define showTimeline #t)
 
@@ -48,13 +49,17 @@
 )
 
 (define (debugTools w)
+  
   (above (if showFrames
-             (text (string-append "Frame " (number->string w)) 10 "black") (text "" 10 "black"))
+             (text (string-append "Frame " (number->string w)) 10 "black")
+                (text "" 10 "black"))
          (if showFPS
-             (text (string-append "FPS " (number->string fps)) 10 "black") (text "" 10 "black"))
+             (text (string-append "FPS " (number->string fps)) 10 "black")
+                (text "" 10 "black"))
          (if showActualState
-             (text (string-append "State " actualState) 10 "black") (text "" 10 "black"))
-  )
+             (text (string-append "State " actualState) 10 "black")
+                (text "" 10 "black"))
+  )         
 )
 
 
@@ -145,7 +150,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (background w)
-  (underlay/xy (rectangle 720 720 "solid" "white") 620 10 (debugTools w))
+  (underlay/xy
+     (underlay/xy
+        (rectangle (size-width screen) (size-height screen) "solid" "white") 620 10 (debugTools w)
+     )
+      0 720
+     (rectangle 720 20 "outline" "black"))
 )
 
 (define (render w gui)
