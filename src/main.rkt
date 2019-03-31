@@ -19,7 +19,7 @@
 (define startFrame 0)
 (define endFrame 0)
 (define count 0)
-(define petName "Daniel")
+(define petName "Panda")
 
 (define debug #t)
 (define showFrames #t)
@@ -183,22 +183,21 @@
 
 (define (render w ui)
   
-  (cond [(gui? ui)
-           (set! actualState "GUI")
-           (underlay/xy (background w) 100 100 (guiDraw w ui))
-        ]
-        
-        [(sprite? ui)
+  (cond [(sprite? ui)
           (set-sprite-path! ui (spritePath ui))
           (set! actualState (string-append "SPRITE "(sprite-name ui)))
           (underlay/xy (background w) 100 100 (spriteDraw w ui))
+        ]
+
+        [else (set! actualState "GUI")
+              (underlay/xy (background w) 100 100 (guiDraw w ui))
         ]
         
   )
 )
 
-(define (guiDraw w gui)
-    (gui w)
+(define (guiDraw w ui)
+    (ui w)
 )
 
   
@@ -238,7 +237,7 @@
 
 (define (keyboard w key)
 
-   ;Rename  
+   ;Rename
    (cond [(and (timelapse w 361 600) (key-event? key))
           (cond [(and (key=? key "\b")(not (equal? petName "")))
                  (writeln (string-append "Key: " key))
@@ -261,7 +260,12 @@
       [(key=? key "left") startFrame]
       [(key=? key "right") endFrame]
       [else w]
-  )
+   )
+
+   ;Menu
+   (cond [(and (timelapse w 361 600) (key=? key "\r")) 601]
+         [else w]
+   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,7 +303,7 @@
    (start w)
 
    (cond [(= w 241) (pause)]
-         ;[(= w 361) (pause)]
+         [(= w 361) (pause)]
          [else (start w)]
    )
 )
