@@ -155,7 +155,9 @@ Racket call ___mouse-expr___ on the current world, the current x and y coordinat
 ```
 Racket opens a separate window in which the current state is rendered each time it is updated.
 
-# Links
+# Links and Resources
+
+
 
 ## Racket Universe
 https://docs.racket-lang.org/teachpack/2htdpuniverse.html
@@ -163,11 +165,17 @@ https://docs.racket-lang.org/teachpack/2htdpuniverse.html
 ## Racket Image
 https://docs.racket-lang.org/teachpack/2htdpimage.html
 
-## Racket Structs Transparent and Mutable 
+## Racket Programmer Structs Transparent and Mutable 
 https://docs.racket-lang.org/guide/define-struct.html#%28tech._transparent%29
+
+## Racket Define-Structus
+https://docs.racket-lang.org/reference/define-struct.html
 
 ## Racket Textbox
 https://youtu.be/ayoofXuKqMY?t=1077
+
+## Racket Mutation with Set!
+https://www.coursera.org/lecture/programming-languages-part-b/mutation-with-set-dIHCG
 
 ## Tamagotchi Original
 https://www.playr.org/play/tamagotchi/538

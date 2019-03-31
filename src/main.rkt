@@ -2,20 +2,22 @@
 
 (require 2htdp/universe)
 (require 2htdp/image)
+;(require test-engine/racket-tests)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global Variables ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct size (height width))
-(define screen (make-size 432 768)) ;True 16:9
+(define screenHeight 432) ;True 16:9
+(define screenWidth 768) ;True 16:9
 (define fps 60)
 (define totalFrames 30000)
 (define assets "assets/")
 (define actualState "Main")
-(define initialFrame 0)
-(define finalFrame 120)
+(define startFrame 0)
+(define endFrame 0)
+(define count 0)
 
 (define debug #t)
 (define showFrames #t)
@@ -27,10 +29,14 @@
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
-(define idleState (make-sprite "idle" "" 120 ".png"))
-
 (define-struct gui (name frames ui) #:transparent)
+(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define idleState (make-sprite "idle" "" 120 ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
@@ -55,16 +61,17 @@
 (define (debugTools w)
   
   (above (if showFrames
-             (text (string-append "FRAME: " (number->string w)) 12 "black")
+             (text (string-append "Frame: " (number->string w)) 12 "black")
                 (text "" 10 "black"))
          (if showActualState
-             (text (string-append "STATE: " actualState) 12 "black")
+             (text (string-append "State: " actualState) 12 "black")
                 (text "" 10 "black"))
          (if showFPS
-             (text (string-append "FPS: " (number->string fps)) 10 "black")
+             (text (string-append "FPS: " (number->string fps)) 12 "black")
                 (text "" 10 "black"))
-         (text (string-append "InitialFrame: " (number->string initialFrame)) 10 "black")
-         (text (string-append "FinalFrame: " (number->string finalFrame)) 10 "black")
+         (text (string-append "Count: " (number->string count)) 12 "black")
+         (text (string-append "StartFrame: " (number->string startFrame)) 12 "black")
+         (text (string-append "EndFrame: " (number->string endFrame)) 12 "black")
   )         
 )
 
@@ -96,40 +103,38 @@
 )
 
 (define (timelapse w a b)
-  (cond [(and (and (>= w a) (< w b))) #t]
+  (cond [(and (and (>= w a) (<= w b))) #t]
         [else #f]
   )
 )
 
-(define (goto w a)
-   (- w (- w a))
+(define (addOneCount)
+  (set! count (+ 1 count))
 )
 
-(define (start w)
-   (+ w 1)
-)
-  
-(define (stop w)
-   (- w 1)
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (engine w)
-  
-  (start w)
-  
-  ;(cond [(= w 200) (goto w 0)]
-  ;      [(timelapse w 600 700) (stop w)]
-  ;      [else (start w)]
-  ;)
+(define (setZeroCount)
+  (set! count 0)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (background w)
+  (cond
+     [(equal? debug #t)
+        (underlay/xy
+        (underlay/xy
+        (underlay/xy
+        (rectangle screenWidth screenHeight "solid" "white") 620 10 (debugTools w))
+        0 408
+     (rectangle 756 20 "outline" "black"))
+     (+ w 1) 395
+     (isosceles-triangle 15 -30 "solid" "red"))]
+     
+  [else (rectangle screenWidth screenHeight "solid" "white")]
+  )
+)
 
 (define (introUI)
   (above (text "Valentina" 40 "purple")
@@ -158,28 +163,25 @@
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (background w)
-  (cond [(equal? debug #t)
-  (underlay/xy
-     (underlay/xy
-        (underlay/xy
-        (rectangle (size-width screen) (size-height screen) "solid" "white") 620 10 (debugTools w)
-     )
-      0 408
-     (rectangle 756 20 "outline" "black"))
-     (+ w 1) 395
-     (isosceles-triangle 15 -30 "solid" "red"))
-     
-  ]
-  [else (rectangle (size-width screen) (size-height screen) "solid" "white")]
+(define (startEndFrames w ui)
+  (define f w)
+  (set! startFrame f)
+  (cond [(gui? ui)(set! endFrame (+ f (gui-frames ui)))]
+        [(gui? ui)(set! endFrame (+ f (sprite-frames ui)))]
   )
 )
 
-(define (renderGUI w ui)
-  (cond [(gui? ui) 
-     (set! actualState "GUI")
-     (underlay/xy (background w) 100 100 (gui-ui ui))
-  ])
+(define (render w ui)
+  (cond [(gui? ui)
+           (set! actualState "GUI")
+           (underlay/xy (background w) 100 100 (gui-ui ui))
+        ]
+        [(sprite? ui)
+          (set-sprite-path! ui (spritePath ui))
+          (set! actualState (string-append "SPRITE "(sprite-name ui)))
+          (underlay/xy (background w) 100 100 (spriteDraw w ui))
+        ]
+  )
 )
 
 (define (spritePath sprite)
@@ -189,23 +191,20 @@
 )
 
 (define (spriteDraw w sprite)
-  (set-sprite-path! sprite (spritePath sprite))
-  (set! actualState (string-append "Sprite "(sprite-name sprite)))
-  (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
-            (bitmap/file (string-append (sprite-path sprite) (number->string w) (sprite-ext sprite)))
-        ]
-  )
-  (cond [(= w 1)(set! initialFrame w)])
-)
 
-(define (setSplitFrame w ui)
-   (cond [(sprite? ui) (set! finalFrame (+ w (sprite-frames ui))) ]
-         [(gui? ui) (set! finalFrame (+ w (gui-frames ui))) ]
+   (addOneCount)
+
+   (cond [(equal? debug #t)
+            (writeln (string-append "Count: " (number->string count)))
+            (writeln (string-append "W: " (number->string w)))
+         ])
+   
+   (cond [(= count (sprite-frames sprite)) (setZeroCount)])
+   
+   (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
+         (bitmap/file (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite)))
+         ]
    )
-)
-
-(define (renderSprite w sprite)
-   (underlay/xy (background w) 100 100 (spriteDraw w sprite))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -220,36 +219,53 @@
 
 (define (change w keypress)
   (cond
-    [(key=? keypress "left") initialFrame]
-    [(key=? keypress "right") finalFrame]
-    [else w]))
+    [(key=? keypress "left") startFrame]
+    [(key=? keypress "right") endFrame]
+    [else w]
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (play w x y ui)
-   (setSplitFrame w ui)
-   (cond [(and (gui? ui) (timelapse w x y)) (renderGUI w ui)]
-         [(and (sprite? ui) (timelapse w x y)) (renderSprite w ui)]
-         [else (renderGUI w menu)]
-   )
-)
-
 (define (gameplay w)
-   (play w 0 120 intro)
-   (play w 120 240 title)
-   ;(play w 240 360 menu)
+   (cond [(timelapse w 0 120)(render w intro)]
+         [(timelapse w 121 240)(render w idleState)]
+         [else (render w menu)]
+   )
+)       
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (engine w)
+  
+   (define (goto w a)
+      (- w (- w a))
+   )
+
+   (define (start w)
+      (+ w 1)
+   )
+  
+   (define (pause)
+      w
+   )
+  
+   (start w)
+  
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; MAIN ;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (big-bang 0
-  (on-tick engine (framerate))
-  (to-draw gameplay (size-width screen) (size-height screen))
-  (on-mouse interactions)
+  (on-tick engine (framerate) 241)
+  (to-draw gameplay screenWidth screenHeight)
+  ;(on-mouse interactions)
   (on-key change)
   ;(stop-when stop)
   (state #f)
