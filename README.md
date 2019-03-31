@@ -157,7 +157,8 @@ Racket opens a separate window in which the current state is rendered each time 
 
 # Links and Resources
 
-
+## Racket Documentation
+https://docs.racket-lang.org/
 
 ## Racket Universe
 https://docs.racket-lang.org/teachpack/2htdpuniverse.html
@@ -180,3 +181,8 @@ https://www.coursera.org/lecture/programming-languages-part-b/mutation-with-set-
 ## Tamagotchi Original
 https://www.playr.org/play/tamagotchi/538
 
+## Topics in Racket
+http://zoo.cs.yale.edu/classes/cs201/topics/
+
+## Notes in Typed Racket
+http://people.cs.uchicago.edu/~adamshaw/cmsc15100-2017/typed-racket-guide/

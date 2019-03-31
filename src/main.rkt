@@ -19,6 +19,7 @@
 (define startFrame 0)
 (define endFrame 0)
 (define count 0)
+(define petName "Daniel")
 
 (define debug #t)
 (define showFrames #t)
@@ -30,7 +31,7 @@
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct gui (name frames ui) #:transparent)
+(define-struct gui (name frames) #:transparent)
 (define-struct sprite (name [path #:mutable] frames ext) #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,32 +138,36 @@
   )
 )
 
-(define (introUI)
+(define (introUI w)
   (above (text "Valentina" 40 "purple")
          (text "Santiago" 40 "purple")
          (text "Daniel" 40 "purple")
   )
 )
 
-(define (titleUI)
+(define (titleUI w)
   (above (text "Tamagotchi" 100 "purple")
          (text "Play" 40 "purple")
   )
 )
 
-(define (menuUI)
+(define (menuUI w)
   (above (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "New Game" 20 "black"))
          (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "Continue" 20 "black"))
   )
 )
 
-(define (nameUI)
-   (text "" 24 'black))
-  
-(define intro (make-gui "intro" 120 (introUI)))
-(define title (make-gui "title" 120 (titleUI)))
-(define menu (make-gui "menu" 120 (menuUI)))
-(define rename (make-gui "name" 120 (nameUI)))
+(define (nameUI w)
+  (above (text "Ingresa el nombre" 16 'black)
+         (text petName 24 'black)
+  )
+)
+
+(define intro (make-gui "intro" 120))
+(define title (make-gui "title" 120))
+(define menu (make-gui "menu" 120))
+(define rename (make-gui "name" 120))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -177,18 +182,26 @@
 )
 
 (define (render w ui)
+  
   (cond [(gui? ui)
            (set! actualState "GUI")
-           (underlay/xy (background w) 100 100 (gui-ui ui))
+           (underlay/xy (background w) 100 100 (guiDraw w ui))
         ]
+        
         [(sprite? ui)
           (set-sprite-path! ui (spritePath ui))
           (set! actualState (string-append "SPRITE "(sprite-name ui)))
           (underlay/xy (background w) 100 100 (spriteDraw w ui))
         ]
+        
   )
 )
 
+(define (guiDraw w gui)
+    (gui w)
+)
+
+  
 (define (spritePath sprite)
   (cond [(sprite? sprite)
             (string-append assets "sprites/" (sprite-name sprite) "/")]
@@ -199,10 +212,11 @@
 
    (addOneCount)
 
-   (cond [(equal? debug #t)
-            (writeln (string-append "Count: " (number->string count)))
-            (writeln (string-append "W: " (number->string w)))
-         ])
+;   (cond [(equal? debug #t)
+;            (writeln (string-append "Count: " (number->string count)))
+;            (writeln (string-append "W: " (number->string w)))
+;         ]
+;   )
    
    (cond [(= count (sprite-frames sprite)) (setZeroCount)])
    
@@ -222,14 +236,31 @@
         [else w]
 ))
 
-(define (change w keypress)
- (cond
-   [(key=? "shift" keypress) w]
-   [else (string-append w keypress)])
-  (cond
-    [(key=? keypress "left") startFrame]
-    [(key=? keypress "right") endFrame]
-    [else w]
+(define (keyboard w key)
+
+   ;Rename  
+   (cond [(and (timelapse w 361 600) (key-event? key))
+          (cond [(and (key=? key "\b")(not (equal? petName "")))
+                 (writeln (string-append "Key: " key))
+                 (set! petName (substring petName 0 (sub1 (string-length petName))))
+                 (writeln (string-append "Petname: " petName))
+                ]
+          )
+          (cond [(and (not (key=? key "shift"))(not (key=? key "\b")))
+                 (writeln (string-append "Key: " key))
+                 (set! petName (string-append petName key))
+                 (writeln (string-append "Petname: " (string-titlecase petName)))
+                ]
+
+          )
+         ]
+   )
+
+   ;Timeline
+   (cond
+      [(key=? key "left") startFrame]
+      [(key=? key "right") endFrame]
+      [else w]
   )
 )
 
@@ -238,11 +269,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
-   (cond [(timelapse w 0 120)(render w intro)]
-         [(timelapse w 121 240)(render w title)]
-         [(timelapse w 241 360) (render w menu)]
-         [(timelapse w 361 480) (render w rename)]
-         [(timelapse w 481 620) (render w idleState)]
+   (cond [(timelapse w 0 120)(render w introUI)]
+         [(timelapse w 121 240)(render w titleUI)]
+         [(timelapse w 241 360) (render w menuUI)]
+         [(timelapse w 361 600) (render w nameUI)]
+         [(timelapse w 601 720) (render w idleState)]
          [else (render w menu)]
    )
 )       
@@ -266,19 +297,25 @@
    )
   
    (start w)
-  
+
+   (cond [(= w 241) (pause)]
+         ;[(= w 361) (pause)]
+         [else (start w)]
+   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
 (big-bang 0
-  (on-tick engine (framerate) 241)
+  (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
   (on-mouse interactions)
-  (on-key change)
   ;(stop-when stop)
   (state #f)
+  (on-key keyboard)
   (name "PandaSushi")
 )
