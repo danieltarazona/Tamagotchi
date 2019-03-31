@@ -40,6 +40,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define idleState (make-sprite "idle" "" 120 ".png"))
+(define eggState (make-sprite "egg" "" 120 ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
@@ -147,7 +148,7 @@
 )
 
 (define (titleUI w)
-  (above (text "Tamagotchi" 100 "purple")
+  (above (text "Tamagotchi" 60 "purple")
          (text "Play" 40 "purple")
   )
 )
@@ -205,7 +206,6 @@
     (ui w)
 )
 
-  
 (define (spritePath sprite)
   (cond [(sprite? sprite)
             (string-append assets "sprites/" (sprite-name sprite) "/")]
@@ -235,9 +235,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (interactions w x y me)
-  (writeln x)
-  (writeln y)
-  
+  (cond [(equal? debug #t) (writeln x) (writeln y)]) 
   
   (cond [(and (timelapse w 241 360) (equal? me "button-down")) 361]
         [else w]
@@ -250,8 +248,8 @@
 
 (define (keyboard w key)
 
-   (writeln (string-append "Key: " key))
-
+   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
+  
    (cond
       [(key=? key "left") startFrame]
       [(key=? key "right") endFrame]
@@ -320,8 +318,6 @@
 ;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
 (big-bang 0
   (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
@@ -331,5 +327,3 @@
   (on-key keyboard)
   (name "PandaSushi")
 )
-
-(keyboard 0 "s")
