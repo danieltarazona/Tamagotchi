@@ -19,6 +19,7 @@
 (define startFrame 0)
 (define endFrame 0)
 (define count 0)
+(define search 0)
 (define petName "Panda")
 
 (define debug #t)
@@ -31,7 +32,7 @@
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct gui (name frames) #:transparent)
+(define-struct gui (name frames ui) #:transparent)
 (define-struct sprite (name [path #:mutable] frames ext) #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -72,8 +73,8 @@
              (text (string-append "FPS: " (number->string fps)) 12 "black")
                 (text "" 10 "black"))
          (text (string-append "Count: " (number->string count)) 12 "black")
-         (text (string-append "StartFrame: " (number->string startFrame)) 12 "black")
-         (text (string-append "EndFrame: " (number->string endFrame)) 12 "black")
+         (text (string-append "Start: " (number->string startFrame)) 12 "black")
+         (text (string-append "End: " (number->string endFrame)) 12 "black")
   )         
 )
 
@@ -105,7 +106,7 @@
 )
 
 (define (timelapse w a b)
-  (cond [(and (and (>= w a) (<= w b))) #t]
+  (cond [(and (>= w a) (<= w b)) #t]
         [else #f]
   )
 )
@@ -163,10 +164,10 @@
   )
 )
 
-(define intro (make-gui "intro" 120))
-(define title (make-gui "title" 120))
-(define menu (make-gui "menu" 120))
-(define rename (make-gui "name" 120))
+(define intro (gui "intro" 120 introUI))
+(define title (gui "title" 120 titleUI))
+(define menu (gui "menu" 120 menuUI))
+(define rename (gui "name" 120 nameUI))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -174,25 +175,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (startEndFrames w ui)
-  (define f w)
-  (set! startFrame f)
-  (cond [(gui? ui)(set! endFrame (+ f (gui-frames ui)))]
-        [(gui? ui)(set! endFrame (+ f (sprite-frames ui)))]
+
+  ; (cond [(equal? debug #t) (writeln startFrame)])
+  
+  (cond [(= w endFrame) (set! startFrame w)]
+        [(gui? ui) (set! endFrame (+ startFrame (gui-frames ui)))]
+        [(sprite? ui) (set! endFrame (+ startFrame (sprite-frames ui)))]
   )
 )
 
 (define (render w ui)
+
+  (startEndFrames w ui)
   
   (cond [(sprite? ui)
           (set-sprite-path! ui (spritePath ui))
           (set! actualState (string-append "SPRITE "(sprite-name ui)))
-          (underlay/xy (background w) 100 100 (spriteDraw w ui))
+          (underlay/xy (background w) 300 150 (spriteDraw w ui))
         ]
 
-        [else (set! actualState "GUI")
-              (underlay/xy (background w) 100 100 (guiDraw w ui))
+        [(gui? ui)
+          (set! actualState "GUI")
+          (underlay/xy (background w) 300 150 (guiDraw w (gui-ui ui)))
         ]
-        
   )
 )
 
@@ -208,14 +213,14 @@
 )
 
 (define (spriteDraw w sprite)
-
+  
    (addOneCount)
 
-;   (cond [(equal? debug #t)
-;            (writeln (string-append "Count: " (number->string count)))
-;            (writeln (string-append "W: " (number->string w)))
-;         ]
-;   )
+   (cond [(equal? debug #t)
+            (writeln (string-append "Count: " (number->string count)))
+            (writeln (string-append "W: " (number->string w)))
+         ]
+   )
    
    (cond [(= count (sprite-frames sprite)) (setZeroCount)])
    
@@ -225,46 +230,48 @@
    )
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Event Handlers ;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (interactions w x y me)
+  (writeln x)
+  (writeln y)
+  
+  
   (cond [(and (timelapse w 241 360) (equal? me "button-down")) 361]
-        ;[(equal? me "leave") 0]
         [else w]
 ))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Keyboard Event Handlers ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (keyboard w key)
 
-   ;Rename
-   (cond [(and (timelapse w 361 600) (key-event? key))
-          (cond [(and (key=? key "\b")(not (equal? petName "")))
-                 (writeln (string-append "Key: " key))
-                 (set! petName (substring petName 0 (sub1 (string-length petName))))
-                 (writeln (string-append "Petname: " petName))
-                ]
-          )
-          (cond [(and (not (key=? key "shift"))(not (key=? key "\b")))
-                 (writeln (string-append "Key: " key))
-                 (set! petName (string-append petName key))
-                 (writeln (string-append "Petname: " (string-titlecase petName)))
-                ]
+   (writeln (string-append "Key: " key))
 
-          )
-         ]
-   )
-
-   ;Timeline
    (cond
       [(key=? key "left") startFrame]
       [(key=? key "right") endFrame]
-      [else w]
-   )
+      [(and  (key=? key "s") (not (timelapse w 361 600))) 0]
 
-   ;Menu
-   (cond [(and (timelapse w 361 600) (key=? key "\r")) 601]
-         [else w]
+       
+      [(and (key=? key "\r") (timelapse w 361 600) ) 601]
+      [(and (and  (key=? key "\b") (timelapse w 361 600)) (not (equal? petName "")))
+                 (set! petName (substring petName 0 (sub1 (string-length petName))))
+                 (writeln (string-append "Key: " key))
+                 (writeln (string-append "String: " (string-titlecase petName)))
+                 w
+      ]
+      [(and (not (key=? key "shift"))(not (key=? key "\b")))
+                 (set! petName (string-append petName key))
+                 (writeln (string-append "Key: " key))
+                 (writeln (string-append "String: " (string-titlecase petName)))
+                 w
+      ]
+      [else w]
    )
 )
 
@@ -273,10 +280,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
-   (cond [(timelapse w 0 120)(render w introUI)]
-         [(timelapse w 121 240)(render w titleUI)]
-         [(timelapse w 241 360) (render w menuUI)]
-         [(timelapse w 361 600) (render w nameUI)]
+   (cond [(timelapse w 0 120)(render w intro)]
+         [(timelapse w 121 240)(render w title)]
+         [(timelapse w 241 360) (render w menu)]
+         [(timelapse w 361 600) (render w rename)]
          [(timelapse w 601 720) (render w idleState)]
          [else (render w menu)]
    )
@@ -299,11 +306,12 @@
    (define (pause)
       w
    )
-  
+
    (start w)
 
    (cond [(= w 241) (pause)]
          [(= w 361) (pause)]
+         [(= w 601) (pause)]
          [else (start w)]
    )
 )
@@ -323,3 +331,5 @@
   (on-key keyboard)
   (name "PandaSushi")
 )
+
+(keyboard 0 "s")
