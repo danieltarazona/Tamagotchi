@@ -1,5 +1,6 @@
 #lang racket
 
+
 (require 2htdp/universe)
 (require 2htdp/image)
 ;(require test-engine/racket-tests)
@@ -155,9 +156,13 @@
   )
 )
 
+(define (nameUI)
+   (text "" 24 'black))
+  
 (define intro (make-gui "intro" 120 (introUI)))
 (define title (make-gui "title" 120 (titleUI)))
 (define menu (make-gui "menu" 120 (menuUI)))
+(define rename (make-gui "name" 120 (nameUI)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -212,12 +217,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (interactions w x y me)
-  (cond [(and (timelapse w 600 700) (equal? me "button-down")) 700]
+  (cond [(and (timelapse w 241 360) (equal? me "button-down")) 361]
         ;[(equal? me "leave") 0]
         [else w]
 ))
 
 (define (change w keypress)
+ (cond
+   [(key=? "shift" keypress) w]
+   [else (string-append w keypress)])
   (cond
     [(key=? keypress "left") startFrame]
     [(key=? keypress "right") endFrame]
@@ -231,7 +239,10 @@
 
 (define (gameplay w)
    (cond [(timelapse w 0 120)(render w intro)]
-         [(timelapse w 121 240)(render w idleState)]
+         [(timelapse w 121 240)(render w title)]
+         [(timelapse w 241 360) (render w menu)]
+         [(timelapse w 361 480) (render w rename)]
+         [(timelapse w 481 620) (render w idleState)]
          [else (render w menu)]
    )
 )       
@@ -265,7 +276,7 @@
 (big-bang 0
   (on-tick engine (framerate) 241)
   (to-draw gameplay screenWidth screenHeight)
-  ;(on-mouse interactions)
+  (on-mouse interactions)
   (on-key change)
   ;(stop-when stop)
   (state #f)
