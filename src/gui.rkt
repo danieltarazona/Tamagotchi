@@ -18,7 +18,57 @@
 (define count 0)
 
 
+(define showGrid #f)
+(define gridX 12)
+(define gridY 9)
+(define centerPoint (circle 5 "solid" "blue"))
 
+(define (gridSizeX)
+   (/ screenWidth gridX)
+)
+
+(define (gridSizeY)
+   (/ screenHeight gridY)
+)
+
+(define (midGridSizeX)
+   (/ (gridSizeX) 2)
+)
+
+(define (midGridSizeY)
+   (/ (gridSizeY) 2)
+)
+
+(define (drawGrid)
+   (overlay/xy
+   (overlay/xy
+    (beside
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     ) 0 0
+       (above
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        )) (alignScreenCenterX centerPoint) (alignScreenCenterY centerPoint)
+           centerPoint)
+)
 
 (define (screenZeroX) 0)
 (define (screenZeroY) 0)
@@ -87,11 +137,11 @@
 
 (define (drawInterface)
   (beside (rectangle 75 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          )
+                                   (rectangle (gridSizeX) 75 "solid" "red")
+                                   (rectangle (gridSizeX) 75 "solid" "red")
+                                   (rectangle (gridSizeX) 75 "solid" "red")
+                                   (rectangle (gridSizeX) 75 "solid" "red")
+  )
 )
 
 (define (drawSprite)

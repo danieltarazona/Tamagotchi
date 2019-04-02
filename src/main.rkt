@@ -149,8 +149,11 @@
     (+ (* (gridSizeY) offset) (+ 0 (/ (image-height img) 2))))
 )
 
-(define (screenBottomY img)
-  (- screenHeight (/ (image-height img) 2))
+(define (screenBottomY x)
+  ((lambda ([x (cond [(image=? x)
+                  (- screenHeight (/ (image-height img) 2))]
+                  [(number? x)] (- screenHeight x))])
+  ))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,21 +272,32 @@
   )
 )
 
+(define (actionsUI w)
+  (beside (rectangle 75 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+  )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define idleState (sprite "idle" "" (screenCenterX) (screenCenterY) 120 ".png"))
+(define emptyState  (sprite "empty" ""  (screenCenterX) (screenCenterY) 1 ".png"))
 (define eggState  (sprite "egg" ""  (screenCenterX) (screenCenterY) 120 ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;; GUI Structs ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro  (gui "intro" (screenCenterX)  (screenCenterY) 120 introUI))
-(define title  (gui "title" (screenCenterX)  (screenCenterY) 120 titleUI))
-(define menu   (gui "menu"  (screenCenterX)  (screenCenterY) 120 menuUI))
-(define rename (gui "name"  (screenCenterX)  (screenCenterY) 120 nameUI))
+(define intro   (gui "intro"     (screenCenterX)  (screenCenterY) 120 introUI))
+(define title   (gui "title"     (screenCenterX)  (screenCenterY) 120 titleUI))
+(define menu    (gui "menu"      (screenCenterX)  (screenCenterY) 120 menuUI))
+(define rename  (gui "name"      (screenCenterX)  (screenCenterY) 120 nameUI))
+(define actions (gui "actions"   (screenCenterX)  (screenBottomY) 120 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -317,16 +331,6 @@
   (place-image (isosceles-triangle 15 -15 "solid" "red")
                w screenHeight
                (rectangle 768 15 "outline" "black")
-  )
-)
-
-(define (drawInterface w)
-  (set! actualGUI "GUI")
-  (beside (rectangle 75 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
   )
 )
 
@@ -378,12 +382,12 @@
 
 (define (gameplay w)
   
-   (cond [(timelapse w 0 120)(render w intro idleState)]
-         [(timelapse w 121 240)(render w title idleState)]
-         [(timelapse w 241 360) (render w menu idleState)]
-         [(timelapse w 361 600) (render w rename idleState)]
-         [(timelapse w 601 720) (render w title idleState )]
-         [else (render w intro idleState)]
+   (cond [(timelapse w 0 120)(render w intro emptyState)]
+         [(timelapse w 121 240)(render w title emptyState)]
+         [(timelapse w 241 360) (render w menu emptyState)]
+         [(timelapse w 361 600) (render w rename emptyState)]
+         [(timelapse w 601 720) (render w actions idleState )]
+         [else (render w menu emptyState)]
    )
 )
 
@@ -409,10 +413,8 @@
    (cond
       [(key=? key "left") startFrame]
       [(key=? key "right") endFrame]
-      [(key=? key "b") (onOffDebug) w]
+      [(key=? key "f8") (onOffDebug) w]
       [(and  (key=? key "s") (not (timelapse w 361 600))) 0]
-
-       
       [(and (key=? key "\r") (timelapse w 361 600) ) 601]
       [(and (and  (key=? key "\b") (timelapse w 361 600)) (not (equal? petName "")))
                  (set! petName (substring petName 0 (sub1 (string-length petName))))
