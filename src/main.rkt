@@ -6,45 +6,162 @@
 ;(require test-engine/racket-tests)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Global Variables ;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Global Variables ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define screenHeight 432) ;True 16:9
 (define screenWidth 768) ;True 16:9
 (define fps 60)
 (define totalFrames 30000)
 (define assets "assets/")
-(define actualState "Main")
+(define background (rectangle 768 432 "solid" "white"))
+(define showGrid #f)
+(define gridX 12)
+(define gridY 9)
+(define centerPoint (circle 5 "solid" "blue"))
+
+(define actualGUI "Main")
+(define actualSprite "Main")
 (define startFrame 0)
 (define endFrame 0)
 (define count 0)
 (define search 0)
-(define petName "Panda")
 
-(define debug #t)
+(define debug #f)
 (define showFrames #t)
 (define showFPS #t)
-(define showActualState #t)
+(define showSpriteName #t)
+(define showGUIName #t)
 (define showTimeline #t)
+
+(define petName "Panda")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct gui (name frames ui) #:transparent)
-(define-struct sprite (name [path #:mutable] frames ext) #:transparent)
+(struct posn (x y))
+(struct gui (name x y frames ui) #:transparent)
+(struct sprite (name [path #:mutable] x y frames ext) #:transparent)
+(struct button (name img x y width height) #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define idleState (make-sprite "idle" "" 120 ".png"))
-(define eggState (make-sprite "egg" "" 120 ".png"))
+(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
+(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
+(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
+(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
+(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define eatButton (button "eat" foodImage 0 0 75 75))
+(define gameButton (button "game" gameImage 0 0 75 75))
+(define listenButton (button "listen" songImage 0 0 75 75))
+(define healButton (button "heal" healImage 0 0 75 75))
+(define washButton (button "wash" washImage 0 0 75 75))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;; GRID ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (gridSizeX)
+   (/ screenWidth gridX)
+)
+
+(define (gridSizeY)
+   (/ screenHeight gridY)
+)
+
+(define (midGridSizeX)
+   (/ (gridSizeX) 2)
+)
+
+(define (midGridSizeY)
+   (/ (gridSizeY) 2)
+)
+
+(define (drawGrid)
+   (overlay/xy
+   (overlay/xy
+    (beside
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     (rectangle (gridSizeX) screenHeight "outline" "red")
+     ) 0 0
+       (above
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        (rectangle screenWidth (gridSizeY) "outline" "red")
+        )) (alignScreenCenterX centerPoint) (alignScreenCenterY centerPoint)
+           centerPoint)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;; GRID Helper Functions ;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (screenZeroX) 0)
+(define (screenZeroY) 0)
+
+(define (screenCenterX)
+  (/ screenWidth 2)
+)
+
+(define (screenCenterY)
+  (/ screenHeight 2)
+)
+
+(define (alignScreenCenterX img)
+  (- (/ screenWidth 2) (/ (image-width img) 2))
+)
+
+(define (alignScreenCenterY img)
+  (- (/ screenHeight 2) (/ (image-height img) 2))
+)
+
+(define (screenLeftX img)
+  (+ 0 (/ (image-width img) 2))
+)
+
+(define (screenRightX img)
+  (- screenWidth (/ (image-width img) 2))
+)
+
+(define screenTopY
+  (lambda (img [offset 0])
+    (+ (* (gridSizeY) offset) (+ 0 (/ (image-height img) 2))))
+)
+
+(define (screenBottomY img)
+  (- screenHeight (/ (image-height img) 2))
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (onOffDebug)
+   (cond [(equal? debug #t) (set! debug #f)]
+         [(equal? debug #f) (set! debug #t)]
+   )
+)
 
 (define (setTrueFPS)
    (set! showFPS #t)
@@ -60,23 +177,6 @@
 
 (define (setFalseTimeline)
    (set! showTimeline #f)
-)
-
-(define (debugTools w)
-  
-  (above (if showFrames
-             (text (string-append "Frame: " (number->string w)) 12 "black")
-                (text "" 10 "black"))
-         (if showActualState
-             (text (string-append "State: " actualState) 12 "black")
-                (text "" 10 "black"))
-         (if showFPS
-             (text (string-append "FPS: " (number->string fps)) 12 "black")
-                (text "" 10 "black"))
-         (text (string-append "Count: " (number->string count)) 12 "black")
-         (text (string-append "Start: " (number->string startFrame)) 12 "black")
-         (text (string-append "End: " (number->string endFrame)) 12 "black")
-  )         
 )
 
 
@@ -124,20 +224,24 @@
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (background w)
-  (cond
-     [(equal? debug #t)
-        (underlay/xy
-        (underlay/xy
-        (underlay/xy
-        (rectangle screenWidth screenHeight "solid" "white") 620 10 (debugTools w))
-        0 408
-     (rectangle 756 20 "outline" "black"))
-     (+ w 1) 395
-     (isosceles-triangle 15 -30 "solid" "red"))]
-     
-  [else (rectangle screenWidth screenHeight "solid" "white")]
-  )
+(define (debugUI w)
+  
+  (above (if showFrames
+             (text (string-append "Frame: " (number->string w)) 12 "black")
+                (text "" 10 "black"))
+         (if showGUIName
+             (text (string-append "GUI: " actualGUI) 12 "black")
+                (text "" 10 "black"))
+         (if showSpriteName
+             (text (string-append "Sprite: " actualSprite) 12 "black")
+                (text "" 10 "black"))
+         (if showFPS
+             (text (string-append "FPS: " (number->string fps)) 12 "black")
+                (text "" 10 "black"))
+         (text (string-append "Count: " (number->string count)) 12 "black")
+         (text (string-append "Start: " (number->string startFrame)) 12 "black")
+         (text (string-append "End: " (number->string endFrame)) 12 "black")
+  )         
 )
 
 (define (introUI w)
@@ -165,11 +269,21 @@
   )
 )
 
-(define intro (gui "intro" 120 introUI))
-(define title (gui "title" 120 titleUI))
-(define menu (gui "menu" 120 menuUI))
-(define rename (gui "name" 120 nameUI))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define idleState (sprite "idle" "" (screenCenterX) (screenCenterY) 120 ".png"))
+(define eggState  (sprite "egg" ""  (screenCenterX) (screenCenterY) 120 ".png"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;; GUI Structs ;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define intro  (gui "intro" (screenCenterX)  (screenCenterY) 120 introUI))
+(define title  (gui "title" (screenCenterX)  (screenCenterY) 120 titleUI))
+(define menu   (gui "menu"  (screenCenterX)  (screenCenterY) 120 menuUI))
+(define rename (gui "name"  (screenCenterX)  (screenCenterY) 120 nameUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -177,33 +291,12 @@
 
 (define (startEndFrames w ui)
 
-  ; (cond [(equal? debug #t) (writeln startFrame)])
+  (cond [(equal? debug #t) (writeln startFrame)])
   
   (cond [(= w endFrame) (set! startFrame w)]
         [(gui? ui) (set! endFrame (+ startFrame (gui-frames ui)))]
         [(sprite? ui) (set! endFrame (+ startFrame (sprite-frames ui)))]
   )
-)
-
-(define (render w ui)
-
-  (startEndFrames w ui)
-  
-  (cond [(sprite? ui)
-          (set-sprite-path! ui (spritePath ui))
-          (set! actualState (string-append "SPRITE "(sprite-name ui)))
-          (underlay/xy (background w) 300 150 (spriteDraw w ui))
-        ]
-
-        [(gui? ui)
-          (set! actualState "GUI")
-          (underlay/xy (background w) 300 150 (guiDraw w (gui-ui ui)))
-        ]
-  )
-)
-
-(define (guiDraw w ui)
-    (ui w)
 )
 
 (define (spritePath sprite)
@@ -212,13 +305,45 @@
   )
 )
 
-(define (spriteDraw w sprite)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Draw Functions GUI ;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (drawBackground w img)
+  img
+)
+
+(define (drawTimeline w)
+  (place-image (isosceles-triangle 15 -15 "solid" "red")
+               w screenHeight
+               (rectangle 768 15 "outline" "black")
+  )
+)
+
+(define (drawInterface w)
+  (set! actualGUI "GUI")
+  (beside (rectangle 75 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+          (rectangle (gridSizeX) 75 "solid" "red")
+  )
+)
+
+(define (drawGui w ui)
+   (ui w)
+)
+
+(define (drawSprite w sprite)
   
    (addOneCount)
+   (startEndFrames w sprite)
+   (set-sprite-path! sprite (spritePath sprite))
+   (set! actualSprite (sprite-name sprite))
 
    (cond [(equal? debug #t)
             (writeln (string-append "Count: " (number->string count)))
-            (writeln (string-append "W: " (number->string w)))
+            (writeln (string-append "Frame: " (number->string w)))
          ]
    )
    
@@ -227,6 +352,38 @@
    (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
          (bitmap/file (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite)))
          ]
+   )
+)
+
+(define (render w gui sprite)
+
+   (cond [(equal? debug #t)  
+                ;Img                             ;X               ;Y
+   (place-image (frame (drawGrid))               (screenCenterX)  (screenCenterY);Grid Layer
+   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenTopY (debugUI w) 0); Debug Layer
+   (place-image (frame (drawTimeline w))         (screenCenterX)  (screenTopY (drawTimeline w) 8); Timeline Layer
+   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui) (gui-y gui); GUI Layer
+   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)  (sprite-y sprite); Sprite Layer
+                                                 (drawBackground w background)))))); Background Layer
+         ][(equal? debug #f)
+   (place-image (drawGui w (gui-ui gui))         (gui-x gui) (gui-y gui); GUI Layer
+   (place-image (drawSprite w sprite)            (sprite-x sprite)  (sprite-y sprite); Sprite Layer 
+                                                 (drawBackground w background)))
+   ])
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (gameplay w)
+  
+   (cond [(timelapse w 0 120)(render w intro idleState)]
+         [(timelapse w 121 240)(render w title idleState)]
+         [(timelapse w 241 360) (render w menu idleState)]
+         [(timelapse w 361 600) (render w rename idleState)]
+         [(timelapse w 601 720) (render w title idleState )]
+         [else (render w intro idleState)]
    )
 )
 
@@ -241,7 +398,6 @@
         [else w]
 ))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Keyboard Event Handlers ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -253,6 +409,7 @@
    (cond
       [(key=? key "left") startFrame]
       [(key=? key "right") endFrame]
+      [(key=? key "b") (onOffDebug) w]
       [(and  (key=? key "s") (not (timelapse w 361 600))) 0]
 
        
@@ -272,20 +429,6 @@
       [else w]
    )
 )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (gameplay w)
-   (cond [(timelapse w 0 120)(render w intro)]
-         [(timelapse w 121 240)(render w title)]
-         [(timelapse w 241 360) (render w menu)]
-         [(timelapse w 361 600) (render w rename)]
-         [(timelapse w 601 720) (render w idleState)]
-         [else (render w menu)]
-   )
-)       
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
@@ -313,6 +456,7 @@
          [else (start w)]
    )
 )
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
