@@ -30,7 +30,24 @@
 (define showGUIName #t)
 (define showTimeline #t)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; Game Variables ;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define petName "Panda")
+
+(define-struct pet ([name #:mutable] stats))
+
+(define statFood   5)
+(define statWash   5)
+(define statGame   5)
+(define statHeal   5)
+(define statListen 5)
+(define statHappy  10)
+
+(define stats (vector statFood statWash statGame statHeal statListen statHappy))
+
+(define panda (make-pet petName stats))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
@@ -163,25 +180,56 @@
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define idleState  (sprite "Idle"  (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define emptyState (sprite "Empty" (screenCenterX) (screenCenterY) "" 1    ".png"))
-(define eggState   (sprite "Egg"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+
+(define emptyState  (sprite "Empty"  (screenCenterX) (screenCenterY) "" 1    ".png"))
+(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define happyState  (sprite "Happy"  (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define sadState    (sprite "Sad"    (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define sickState   (sprite "Sick"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define hungryState (sprite "Hungry" (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define dirtyState  (sprite "Diry"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define dedState    (sprite "Ded"    (screenCenterX) (screenCenterY) "" 120  ".png"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;; Messages ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define sadMessage    (sprite "SadCloud"    (screenCenterX) (screenCenterY) "" 1    ".png"))
+(define happyMessage  (sprite "HappyCloud"  (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define hungryMessage (sprite "HungryCloud" (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define sickMessage   (sprite "SickCloud"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define dirtyMessage  (sprite "DirtyCloud"  (screenCenterX) (screenCenterY) "" 120  ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
-(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
-(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
-(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
-(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
+(define foodImage  (bitmap/file (string-append assets "img/ui/food.png")))
+(define gameImage  (bitmap/file (string-append assets "img/ui/game.png")))
+(define songImage  (bitmap/file (string-append assets "img/ui/song.png")))
+(define healImage  (bitmap/file (string-append assets "img/ui/heal.png")))
+(define washImage  (bitmap/file (string-append assets "img/ui/wash.png")))
+(define sleepImage (bitmap/file (string-append assets "img/ui/sleep.png")))
 
-(define eatButton    (button "eat"    foodImage 0 0 75 75))
-(define gameButton   (button "game"   gameImage 0 0 75 75))
-(define listenButton (button "listen" songImage 0 0 75 75))
-(define healButton   (button "heal"   healImage 0 0 75 75))
-(define washButton   (button "wash"   washImage 0 0 75 75))
+(define eatButton    (button "Eat"        foodImage  0 0 75 75))
+(define gameButton   (button "Game"       gameImage  0 0 75 75))
+(define listenButton (button "Listen"     songImage  0 0 75 75))
+(define healButton   (button "Heal"       healImage  0 0 75 75))
+(define washButton   (button "Wash"       washImage  0 0 75 75))
+(define sleepButton  (button "Sleep"      sleepImage 0 0 75 75))
+
+(define newGameButton  (button "New Game"
+                               (underlay/xy
+                                  (rectangle 100 80 "outline" "black") 0 0
+                                  (text "New Game" 20 "black"))
+                               0 0 75 75))
+
+(define continueButton (button "Continue"
+                               (underlay/xy
+                                  (rectangle 100 80 "outline" "black") 0 0
+                                  (text "Continue" 20 "black"))
+                               0 0 75 75))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
@@ -219,8 +267,10 @@
 )
 
 (define (menuUI w)
-  (above (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "New Game" 20 "black"))
-         (underlay/xy (rectangle 100 80 "outline" "black") 0 0 (text "Continue" 20 "black"))
+  (overlay/offset
+         (button-img newGameButton)
+         0 50
+         (button-img continueButton)
   )
 )
 
@@ -232,19 +282,54 @@
 
 (define (actionsUI w)
   (overlay/offset
-   (overlay/xy 
-   (overlay/xy 
-   (overlay/xy 
-   (overlay/xy (rectangle 100 20 "outline" "black")
-               110 0
-               (rectangle 100  20 "outline" "black"))
-               220 0
-               (rectangle 100  20 "outline" "black"))
-               330 0
-               (rectangle 100  20 "outline" "black"))
-               440 0
-               (rectangle 100  20 "outline" "black"))
-   0 350
+      (overlay/xy
+        (overlay/xy
+           (overlay/xy
+              (overlay/xy 
+                (overlay/xy
+                (overlay/xy  (text
+                                (string-append "Food "
+                                   (number->string (vector-ref (pet-stats panda) 0)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 0))  20 "solid" "red") 0 0
+                                        (rectangle 100  20 "outline" "black")))
+                110 0
+                (overlay/xy  (text
+                                (string-append "Clean "
+                                   (number->string (vector-ref (pet-stats panda) 1)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 1))  20 "solid" "red") 0 0
+                                        (rectangle 100  20 "outline" "black"))))
+                220 0
+                (overlay/xy  (text
+                                (string-append "Game "
+                                   (number->string (vector-ref (pet-stats panda) 2)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 2))  20 "solid" "red") 0 0
+                                        (rectangle 100  20 "outline" "black"))))
+                330 0
+                (overlay/xy  (text
+                                (string-append "Heal "
+                                   (number->string (vector-ref (pet-stats panda) 3)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 3))  20 "solid" "red") 0 0
+                                        (rectangle 100  20 "outline" "black"))))
+                 440 0
+                (overlay/xy  (text
+                                (string-append "Listen "
+                                   (number->string (vector-ref (pet-stats panda) 4)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red") 0 0
+                                        (rectangle 100  20 "outline" "black"))))
+                 550 0
+                 (overlay/xy (text
+                                (string-append "Happy "
+                                   (number->string (vector-ref (pet-stats panda) 5)) "/5")
+                                12 "black") -25 0
+                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 5))  20 "solid" "red") 0 0
+                                         (rectangle 100  20 "outline" "black"))))
+    0 350
+   (overlay/xy
    (overlay/xy 
    (overlay/xy 
    (overlay/xy 
@@ -257,6 +342,8 @@
                (button-img healButton))
                440 0
                (button-img washButton))
+               550 0
+               (button-img sleepButton))
    )
 )
 
@@ -268,7 +355,7 @@
 (define title   (gui "Title"   (screenCenterX) (screenCenterY)   360  720  titleUI))
 (define menu    (gui "Menu"    (screenCenterX) (screenCenterY)   720  1080 menuUI))
 (define rename  (gui "Rename"  (screenCenterX) (screenCenterY)   1080 1360 renameUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY) 1360 1715 actionsUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY)   1360 1715 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
@@ -331,7 +418,7 @@
 
 (define (spritePath sprite)
   (cond [(sprite? sprite)
-            (string-append assets "sprites/" (sprite-name sprite) "/")]
+            (string-append assets "sprites/" (string-downcase (sprite-name sprite)) "/")]
   )
 )
 
@@ -344,6 +431,13 @@
 )
 
 (define (drawTimeline w)
+  (place-image (isosceles-triangle 15 -15 "solid" "red")
+               w screenHeight
+               (rectangle 768 15 "outline" "black")
+  )
+)
+
+(define (drawNotification w)
   (place-image (isosceles-triangle 15 -15 "solid" "red")
                w screenHeight
                (rectangle 768 15 "outline" "black")
@@ -363,39 +457,42 @@
             (writeln (string-append "Frame: " (number->string w)))
          ]
    )
-  
-   (set-sprite-path! sprite (spritePath sprite))
-  
-   (cond [(= count (sprite-frames sprite)) (setZeroCount)])
-   
-   (cond [(and
-           (< count (sprite-frames sprite))
-           (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
-           (addOneCount)
-           (bitmap/file
-               (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
-           )
+
+   (cond [(equal? (sprite-name sprite) "Empty") empty-image]
+         [else (set-sprite-path! sprite (spritePath sprite))
+               (cond [(= count (sprite-frames sprite)) (setZeroCount)])
+               (cond [(and
+                       (< count (sprite-frames sprite))
+                       (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
+                      (addOneCount)
+                      (bitmap/file
+                       (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
+                       )
+                      ]
+                     )
          ]
    )
 )
 
-(define (render w gui sprite)
+(define (render w gui sprite [message emptyState])
 
    (set! actualGUI gui)
    (set! actualSprite sprite)
 
    (cond [(equal? debug #t)  
                 ;Img                             ;X                           ;Y
-   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)   ; Grid Layer
-   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1) ; Debug Layer
-   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8) ; Timeline Layer
-   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)       ; GUI Layer
-   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite) ; Sprite Layer
-                                                 (drawBackground w background))))))            ; Background Layer
+   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)    ; Grid Layer
+   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1)  ; Debug Layer
+   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8)  ; Timeline Layer
+   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)        ; GUI Layer
+   (place-image (frame (drawSprite w message))   (sprite-x message)          (sprite-y message) ; Notification Layer
+   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer
+                                                 (drawBackground w background)))))))            ; Background Layer
          ][(equal? debug #f)
-   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)       ; GUI Layer
-   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite) ; Sprite Layer 
-                                                 (drawBackground w background)))
+   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)        ; GUI Layer
+   (place-image (drawSprite w message)           (sprite-x message)          (sprite-y message) ; Notification Layer
+   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer 
+                                                 (drawBackground w background))))
    ])
 )
 
@@ -418,7 +515,7 @@
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (isInside x y button)
+(define (isInside? x y button)
   (cond [(or (and
              (>= x (button-x button))
              (<= x (+ (button-x button)(button-width button)))

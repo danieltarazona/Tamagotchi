@@ -2,12 +2,12 @@
 
 (define estadisticas (vector 6 0))
 
-(define nivelComida    10)
-(define nivelBano      10)
-(define nivelJuego     10)
-(define nivelSalud     10)
-(define nivelMusica    10)
-(define nivelFelicidad 10)
+(define nivelComida 0)
+(define nivelBano 1)
+(define nivelJuego 2)
+(define nivelSalud 3)
+(define nivelMusica 4)
+(define nivelFelicidad 5)
 
 (vector-ref estadisticas nivelComida); así se llaman los vectores dentro de las funciones
 
