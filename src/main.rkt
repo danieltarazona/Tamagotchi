@@ -63,100 +63,6 @@
 (define washButton (button "wash" washImage 0 0 75 75))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;; GRID ;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (gridSizeX)
-   (/ screenWidth gridX)
-)
-
-(define (gridSizeY)
-   (/ screenHeight gridY)
-)
-
-(define (midGridSizeX)
-   (/ (gridSizeX) 2)
-)
-
-(define (midGridSizeY)
-   (/ (gridSizeY) 2)
-)
-
-(define (drawGrid)
-   (overlay/xy
-   (overlay/xy
-    (beside
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     (rectangle (gridSizeX) screenHeight "outline" "red")
-     ) 0 0
-       (above
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        (rectangle screenWidth (gridSizeY) "outline" "red")
-        )) (alignScreenCenterX centerPoint) (alignScreenCenterY centerPoint)
-           centerPoint)
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;; GRID Helper Functions ;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (screenZeroX) 0)
-(define (screenZeroY) 0)
-
-(define (screenCenterX)
-  (/ screenWidth 2)
-)
-
-(define (screenCenterY)
-  (/ screenHeight 2)
-)
-
-(define (alignScreenCenterX img)
-  (- (/ screenWidth 2) (/ (image-width img) 2))
-)
-
-(define (alignScreenCenterY img)
-  (- (/ screenHeight 2) (/ (image-height img) 2))
-)
-
-(define (screenLeftX img)
-  (+ 0 (/ (image-width img) 2))
-)
-
-(define (screenRightX img)
-  (- screenWidth (/ (image-width img) 2))
-)
-
-(define screenTopY
-  (lambda (img [offset 0])
-    (+ (* (gridSizeY) offset) (+ 0 (/ (image-height img) 2))))
-)
-
-(define (screenBottomY x)
-  ((lambda ([x (cond [(image=? x)
-                  (- screenHeight (/ (image-height img) 2))]
-                  [(number? x)] (- screenHeight x))])
-  ))
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -223,6 +129,91 @@
   (set! count 0)
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;; GRID ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (gridSizeX)
+   (/ screenWidth gridX)
+)
+
+(define (gridSizeY)
+   (/ screenHeight gridY)
+)
+
+(define (midGridSizeX)
+   (/ (gridSizeX) 2)
+)
+
+(define (midGridSizeY)
+   (/ (gridSizeY) 2)
+)
+
+(define (drawGrid)
+  (define rectX (rectangle (gridSizeX) screenHeight "outline" "red"))
+  (define rectY (rectangle screenWidth (gridSizeY) "outline" "red"))
+  (overlay/xy
+   (overlay/xy
+    (beside rectX rectX rectX rectX rectX rectX rectX rectX rectX rectX rectX rectX)
+    0 0
+    (above rectY rectY rectY rectY rectY rectY rectY rectY rectY)
+    )
+   (alignScreenCenterX centerPoint) (alignScreenCenterY centerPoint) centerPoint)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;; GRID Helper Functions ;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (screenZeroX) 0)
+(define (screenZeroY) 0)
+
+(define (screenCenterX)
+  (/ screenWidth 2)
+)
+
+(define (screenCenterY)
+  (/ screenHeight 2)
+)
+
+(define (alignScreenCenterX img)
+  (- (/ screenWidth 2) (/ (image-width img) 2))
+)
+
+(define (alignScreenCenterY img)
+  (- (/ screenHeight 2) (/ (image-height img) 2))
+)
+
+(define (screenLeftX img)
+  (+ 0 (/ (image-width img) 2))
+)
+
+(define (screenRightX img)
+  (- screenWidth (/ (image-width img) 2))
+)
+
+(define screenTopY
+  (lambda (img [offset 0])
+    (+ (* (gridSizeY) offset) (+ 0 (/ (image-height img) 2))))
+)
+
+(define (screenBottomY [x 0])
+    (cond [(image? x) (- screenHeight (/ (image-height x) 2))]
+          [(number? x) (- screenHeight x)]
+          [else screenHeight]
+          )
+  
+)
+
+(define (offsetY y)
+  (* (gridSizeY) y)
+)
+
+
+(define (offsetX x)
+  (* (gridSizeX) x)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -285,19 +276,19 @@
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define idleState (sprite "idle" "" (screenCenterX) (screenCenterY) 120 ".png"))
-(define emptyState  (sprite "empty" ""  (screenCenterX) (screenCenterY) 1 ".png"))
-(define eggState  (sprite "egg" ""  (screenCenterX) (screenCenterY) 120 ".png"))
+(define idleState  (sprite "idle" ""  (screenCenterX) (screenCenterY) 120 ".png"))
+(define emptyState (sprite "empty" "" (screenCenterX) (screenCenterY) 1   ".png"))
+(define eggState   (sprite "egg" ""   (screenCenterX) (screenCenterY) 120 ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;; GUI Structs ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "intro"     (screenCenterX)  (screenCenterY) 120 introUI))
-(define title   (gui "title"     (screenCenterX)  (screenCenterY) 120 titleUI))
-(define menu    (gui "menu"      (screenCenterX)  (screenCenterY) 120 menuUI))
-(define rename  (gui "name"      (screenCenterX)  (screenCenterY) 120 nameUI))
-(define actions (gui "actions"   (screenCenterX)  (screenBottomY) 120 actionsUI))
+(define intro   (gui "intro"   (screenCenterX) (screenCenterY) 120 introUI))
+(define title   (gui "title"   (screenCenterX) (screenCenterY) 120 titleUI))
+(define menu    (gui "menu"    (screenCenterX) (screenCenterY) 120 menuUI))
+(define rename  (gui "name"    (screenCenterX) (screenCenterY) 120 nameUI))
+(define actions (gui "actions" (screenCenterX) (screenBottomY) 120 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
@@ -362,16 +353,16 @@
 (define (render w gui sprite)
 
    (cond [(equal? debug #t)  
-                ;Img                             ;X               ;Y
-   (place-image (frame (drawGrid))               (screenCenterX)  (screenCenterY);Grid Layer
-   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenTopY (debugUI w) 0); Debug Layer
-   (place-image (frame (drawTimeline w))         (screenCenterX)  (screenTopY (drawTimeline w) 8); Timeline Layer
-   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui) (gui-y gui); GUI Layer
-   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)  (sprite-y sprite); Sprite Layer
-                                                 (drawBackground w background)))))); Background Layer
+                ;Img                             ;X                           ;Y
+   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)                ;Grid Layer
+   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenTopY (debugUI w) 0)     ; Debug Layer
+   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenTopY (drawTimeline w) 8); Timeline Layer
+   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)                    ; GUI Layer
+   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)              ; Sprite Layer
+                                                 (drawBackground w background))))))                         ; Background Layer
          ][(equal? debug #f)
-   (place-image (drawGui w (gui-ui gui))         (gui-x gui) (gui-y gui); GUI Layer
-   (place-image (drawSprite w sprite)            (sprite-x sprite)  (sprite-y sprite); Sprite Layer 
+   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)                    ; GUI Layer
+   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite)              ; Sprite Layer 
                                                  (drawBackground w background)))
    ])
 )
@@ -386,7 +377,7 @@
          [(timelapse w 121 240)(render w title emptyState)]
          [(timelapse w 241 360) (render w menu emptyState)]
          [(timelapse w 361 600) (render w rename emptyState)]
-         [(timelapse w 601 720) (render w actions idleState )]
+         [(timelapse w 601 720) (render w actions idleState)]
          [else (render w menu emptyState)]
    )
 )
