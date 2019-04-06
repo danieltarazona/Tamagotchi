@@ -245,12 +245,18 @@
                440 0
                (rectangle 100  20 "outline" "black"))
    0 350
-   (beside (button-img gameButton)
-           (button-img eatButton)
-           (button-img listenButton)
-           (button-img healButton)
-           (button-img washButton)
-           )
+   (overlay/xy 
+   (overlay/xy 
+   (overlay/xy 
+   (overlay/xy (button-img gameButton)
+               110 0
+               (button-img eatButton))
+               220 0
+               (button-img listenButton))
+               330 0
+               (button-img healButton))
+               440 0
+               (button-img washButton))
    )
 )
 
@@ -489,7 +495,7 @@
 (define (engine w)
 
    (define (start w)
-      (+ w 1)
+      (add1 w)
    )
   
    (define (pause)
