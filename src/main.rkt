@@ -1,10 +1,7 @@
 #lang racket
 
-
 (require 2htdp/universe)
 (require 2htdp/image)
-;(require test-engine/racket-tests)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global Variables ;;;;;;;;;;;;
@@ -34,6 +31,32 @@
 (define showTimeline #t)
 
 (define petName "Panda")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (onOffDebug)
+   (cond [(equal? debug #t) (set! debug #f)]
+         [else (set! debug #t)]
+   )
+)
+
+(define (setTrueFPS)
+   (set! showFPS #t)
+)
+
+(define (setFalseFPS)
+   (set! showFPS #f)
+)
+
+(define (setTrueTimeline)
+   (set! showTimeline #t)
+)
+
+(define (setFalseTimeline)
+   (set! showTimeline #f)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;; GRID ;;;;;;;;;;;;;;;;;;
@@ -98,9 +121,8 @@
   (- screenWidth (/ (image-width img) 2))
 )
 
-(define screenTopY
-  (lambda (img [offset 0])
-    (+ (* (gridSizeY) offset) (+ 0 (/ (image-height img) 2))))
+(define (screenTopY img)
+   (cond  [(image? img) (/ (image-height img) 2)])
 )
 
 (define (screenBottomY [x 0])
@@ -110,11 +132,11 @@
           )
 )
 
-(define (offsetY y)
+(define (screenOffsetY y)
   (* (gridSizeY) y)
 )
 
-(define (offsetX x)
+(define (screenOffsetX x)
   (* (gridSizeX) x)
 )
 
@@ -137,7 +159,29 @@
                       [frames #:mutable]
                        ext)   #:transparent)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define idleState  (sprite "Idle"  (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define emptyState (sprite "Empty" (screenCenterX) (screenCenterY) "" 1    ".png"))
+(define eggState   (sprite "Egg"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
+(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
+(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
+(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
+(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
+
+(define eatButton    (button "eat"    foodImage 0 0 75 75))
+(define gameButton   (button "game"   gameImage 0 0 75 75))
+(define listenButton (button "listen" songImage 0 0 75 75))
+(define healButton   (button "heal"   healImage 0 0 75 75))
+(define washButton   (button "wash"   washImage 0 0 75 75))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
@@ -187,68 +231,38 @@
 )
 
 (define (actionsUI w)
-  (place-image (button-img eatButton) 0 0 empty-image)
+  (overlay/offset
+   (overlay/xy 
+   (overlay/xy 
+   (overlay/xy 
+   (overlay/xy (rectangle 100 20 "outline" "black")
+               110 0
+               (rectangle 100  20 "outline" "black"))
+               220 0
+               (rectangle 100  20 "outline" "black"))
+               330 0
+               (rectangle 100  20 "outline" "black"))
+               440 0
+               (rectangle 100  20 "outline" "black"))
+   0 350
+   (beside (button-img gameButton)
+           (button-img eatButton)
+           (button-img listenButton)
+           (button-img healButton)
+           (button-img washButton)
+           )
+   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0    360  introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY) 360  720  titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 720  1080 menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 1080 1360 renameUI))
-(define actions (gui "Actions" (screenCenterX) (screenBottomY) 1360 1700 actionsUI))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define idleState  (sprite "Idle"  (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define emptyState (sprite "Empty" (screenCenterX) (screenCenterY) "" 1    ".png"))
-(define eggState   (sprite "Egg"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
-(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
-(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
-(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
-(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
-
-(define eatButton    (button "eat"    foodImage 100 100 75 75))
-(define gameButton   (button "game"   gameImage 0   0   75 75))
-(define listenButton (button "listen" songImage 0   0   75 75))
-(define healButton   (button "heal"   healImage 0   0   75 75))
-(define washButton   (button "wash"   washImage 100 100 75 75))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (onOffDebug)
-   (cond [(equal? debug #t) (set! debug #f)]
-         [(equal? debug #f) (set! debug #t)]
-   )
-)
-
-(define (setTrueFPS)
-   (set! showFPS #t)
-)
-
-(define (setFalseFPS)
-   (set! showFPS #f)
-)
-
-(define (setTrueTimeline)
-   (set! showTimeline #t)
-)
-
-(define (setFalseTimeline)
-   (set! showTimeline #f)
-)
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)   0    360  introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY)   360  720  titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)   720  1080 menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)   1080 1360 renameUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY) 1360 1715 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
@@ -285,9 +299,7 @@
 )
 
 (define (goTo w x)
-  (cond [(gui? x)    (gui-start x)]
-        ;[(sprite? x) (sprite-start x)]
-  )
+  (cond [(gui? x)(gui-start x)])
 )
 
 (define (timelapse w x)
@@ -333,7 +345,9 @@
 )
 
 (define (drawGui w ui)
-   (ui w)
+   (cond [(empty? ui) empty-image]
+         [else (ui w)]
+   )
 )
 
 (define (drawSprite w sprite)
@@ -366,15 +380,15 @@
 
    (cond [(equal? debug #t)  
                 ;Img                             ;X                           ;Y
-   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)                ;Grid Layer
-   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenTopY (debugUI w) 0)     ; Debug Layer
-   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenTopY (drawTimeline w) 8); Timeline Layer
-   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)                    ; GUI Layer
-   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)              ; Sprite Layer
-                                                 (drawBackground w background))))))                         ; Background Layer
+   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)   ; Grid Layer
+   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1) ; Debug Layer
+   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8) ; Timeline Layer
+   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)       ; GUI Layer
+   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite) ; Sprite Layer
+                                                 (drawBackground w background))))))            ; Background Layer
          ][(equal? debug #f)
-   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)                    ; GUI Layer
-   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite)              ; Sprite Layer 
+   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)       ; GUI Layer
+   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite) ; Sprite Layer 
                                                  (drawBackground w background)))
    ])
 )
@@ -385,18 +399,32 @@
 
 (define (gameplay w)
 
-    (cond [(timelapse w intro)   (render w intro emptyState)]
-          [(timelapse w title)   (render w title emptyState)]
-          [(timelapse w menu)    (render w menu emptyState)]
-          [(timelapse w rename)   (render w rename emptyState)]
+    (cond [(timelapse w intro)     (render w intro emptyState)]
+          [(timelapse w title)     (render w title emptyState)]
+          [(timelapse w menu)      (render w menu emptyState)]
+          [(timelapse w rename)    (render w rename emptyState)]
           [(timelapse w actions)   (render w actions idleState)]
-          [else (render w menu emptyState)]
+          [else (render w actions idleState)]
     )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (isInside x y button)
+  (cond [(or (and
+             (>= x (button-x button))
+             (<= x (+ (button-x button)(button-width button)))
+         )   (and
+             (>= y (button-y button))
+             (<= y (+ (button-y button)(button-height button)))
+             )
+         )
+         #t]
+        [else #f]
+   )
+)
 
 (define (mouse w x y me)
  
