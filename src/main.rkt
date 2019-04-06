@@ -21,10 +21,8 @@
 (define gridY 9)
 (define centerPoint (circle 5 "solid" "blue"))
 
-(define actualGUI "Main")
-(define actualSprite "Main")
-(define startFrame 0)
-(define endFrame 0)
+(define actualGUI empty)
+(define actualSprite empty)
 (define count 0)
 (define search 0)
 
@@ -36,98 +34,6 @@
 (define showTimeline #t)
 
 (define petName "Panda")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(struct posn (x y))
-(struct gui (name x y frames ui) #:transparent)
-(struct sprite (name [path #:mutable] x y frames ext) #:transparent)
-(struct button (name img x y width height) #:transparent)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
-(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
-(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
-(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
-(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
-
-(define eatButton (button "eat" foodImage 0 0 75 75))
-(define gameButton (button "game" gameImage 0 0 75 75))
-(define listenButton (button "listen" songImage 0 0 75 75))
-(define healButton (button "heal" healImage 0 0 75 75))
-(define washButton (button "wash" washImage 0 0 75 75))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (onOffDebug)
-   (cond [(equal? debug #t) (set! debug #f)]
-         [(equal? debug #f) (set! debug #t)]
-   )
-)
-
-(define (setTrueFPS)
-   (set! showFPS #t)
-)
-
-(define (setFalseFPS)
-   (set! showFPS #f)
-)
-
-(define (setTrueTimeline)
-   (set! showTimeline #t)
-)
-
-(define (setFalseTimeline)
-   (set! showTimeline #f)
-)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Helper Functions ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; (current-directory)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Helper Functions Engine ;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (waitSeconds x)
-  (* x 28)
-)
-
-(define (waitMinutes x)
-  (* 28 (* x 60))
-)
-
-(define (waitHours x)
-  (* 24 (* 28 (* x 60)))
-)
-
-(define (framerate)
-  (/ 1 fps)
-)
-
-(define (timelapse w a b)
-  (cond [(and (>= w a) (<= w b)) #t]
-        [else #f]
-  )
-)
-
-(define (addOneCount)
-  (set! count (+ 1 count))
-)
-
-(define (setZeroCount)
-  (set! count 0)
-)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;; GRID ;;;;;;;;;;;;;;;;;;
@@ -202,17 +108,36 @@
           [(number? x) (- screenHeight x)]
           [else screenHeight]
           )
-  
 )
 
 (define (offsetY y)
   (* (gridSizeY) y)
 )
 
-
 (define (offsetX x)
   (* (gridSizeX) x)
 )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-struct posn (x y))
+(define-struct button (name img x y width height) #:transparent)
+
+(define-struct gui    (name
+                       x y
+                      [start  #:mutable]                   
+                      [end    #:mutable]
+                       ui)    #:transparent)
+
+(define-struct sprite (name
+                       x y
+                      [path   #:mutable] 
+                      [frames #:mutable]
+                       ext)   #:transparent)
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
@@ -224,17 +149,15 @@
              (text (string-append "Frame: " (number->string w)) 12 "black")
                 (text "" 10 "black"))
          (if showGUIName
-             (text (string-append "GUI: " actualGUI) 12 "black")
+             (text (string-append "GUI: " (gui-name actualGUI)) 12 "black")
                 (text "" 10 "black"))
          (if showSpriteName
-             (text (string-append "Sprite: " actualSprite) 12 "black")
+             (text (string-append "Sprite: " (sprite-name actualSprite)) 12 "black")
                 (text "" 10 "black"))
          (if showFPS
              (text (string-append "FPS: " (number->string fps)) 12 "black")
                 (text "" 10 "black"))
          (text (string-append "Count: " (number->string count)) 12 "black")
-         (text (string-append "Start: " (number->string startFrame)) 12 "black")
-         (text (string-append "End: " (number->string endFrame)) 12 "black")
   )         
 )
 
@@ -257,52 +180,136 @@
   )
 )
 
-(define (nameUI w)
+(define (renameUI w)
   (above (text "Ingresa el nombre" 16 'black)
          (text petName 24 'black)
   )
 )
 
 (define (actionsUI w)
-  (beside (rectangle 75 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-          (rectangle (gridSizeX) 75 "solid" "red")
-  )
+  (place-image (button-img eatButton) 0 0 empty-image)
 )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0    360  introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY) 360  720  titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 720  1080 menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 1080 1360 renameUI))
+(define actions (gui "Actions" (screenCenterX) (screenBottomY) 1360 1700 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define idleState  (sprite "idle" ""  (screenCenterX) (screenCenterY) 120 ".png"))
-(define emptyState (sprite "empty" "" (screenCenterX) (screenCenterY) 1   ".png"))
-(define eggState   (sprite "egg" ""   (screenCenterX) (screenCenterY) 120 ".png"))
+(define idleState  (sprite "Idle"  (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define emptyState (sprite "Empty" (screenCenterX) (screenCenterY) "" 1    ".png"))
+(define eggState   (sprite "Egg"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;; GUI Structs ;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "intro"   (screenCenterX) (screenCenterY) 120 introUI))
-(define title   (gui "title"   (screenCenterX) (screenCenterY) 120 titleUI))
-(define menu    (gui "menu"    (screenCenterX) (screenCenterY) 120 menuUI))
-(define rename  (gui "name"    (screenCenterX) (screenCenterY) 120 nameUI))
-(define actions (gui "actions" (screenCenterX) (screenBottomY) 120 actionsUI))
+(define foodImage (bitmap/file (string-append assets "img/ui/food.png")))
+(define gameImage (bitmap/file (string-append assets "img/ui/game.png")))
+(define songImage (bitmap/file (string-append assets "img/ui/song.png")))
+(define healImage (bitmap/file (string-append assets "img/ui/heal.png")))
+(define washImage (bitmap/file (string-append assets "img/ui/wash.png")))
+
+(define eatButton    (button "eat"    foodImage 100 100 75 75))
+(define gameButton   (button "game"   gameImage 0   0   75 75))
+(define listenButton (button "listen" songImage 0   0   75 75))
+(define healButton   (button "heal"   healImage 0   0   75 75))
+(define washButton   (button "wash"   washImage 100 100 75 75))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (onOffDebug)
+   (cond [(equal? debug #t) (set! debug #f)]
+         [(equal? debug #f) (set! debug #t)]
+   )
+)
+
+(define (setTrueFPS)
+   (set! showFPS #t)
+)
+
+(define (setFalseFPS)
+   (set! showFPS #f)
+)
+
+(define (setTrueTimeline)
+   (set! showTimeline #t)
+)
+
+(define (setFalseTimeline)
+   (set! showTimeline #f)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; (current-directory)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;; Helper Functions Engine ;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (waitSeconds x)
+  (* x 28)
+)
+
+(define (waitMinutes x)
+  (* 28 (* x 60))
+)
+
+(define (waitHours x)
+  (* 24 (* 28 (* x 60)))
+)
+
+(define (framerate)
+  (/ 1 fps)
+)
+
+(define (addOneCount)
+  (set! count (+ 1 count))
+)
+
+(define (setZeroCount)
+  (set! count 0)
+)
+
+(define (goTo w x)
+  (cond [(gui? x)    (gui-start x)]
+        ;[(sprite? x) (sprite-start x)]
+  )
+)
+
+(define (timelapse w x)
+  (cond [(and (>= w (gui-start x)) (<= w (gui-end x)))  #t]  
+        [else #f])
+)
+
+(define (isSprite? [x "Main"])
+  (cond [(symbol? x)(equal? actualSprite x) #t]
+        [(and (sprite? x)(equal? actualSprite (sprite-name x))) #t]
+        [else #f]
+  )
+)
+
+(define (isGUI? w x)
+  (cond [(and (>= w (gui-start x)) (<= w (gui-end x)))  #t]  
+        [else #f])
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (startEndFrames w ui)
-
-  (cond [(equal? debug #t) (writeln startFrame)])
-  
-  (cond [(= w endFrame) (set! startFrame w)]
-        [(gui? ui) (set! endFrame (+ startFrame (gui-frames ui)))]
-        [(sprite? ui) (set! endFrame (+ startFrame (sprite-frames ui)))]
-  )
-)
 
 (define (spritePath sprite)
   (cond [(sprite? sprite)
@@ -331,26 +338,31 @@
 
 (define (drawSprite w sprite)
   
-   (addOneCount)
-   (startEndFrames w sprite)
-   (set-sprite-path! sprite (spritePath sprite))
-   (set! actualSprite (sprite-name sprite))
-
    (cond [(equal? debug #t)
             (writeln (string-append "Count: " (number->string count)))
             (writeln (string-append "Frame: " (number->string w)))
          ]
    )
-   
+  
+   (set-sprite-path! sprite (spritePath sprite))
+  
    (cond [(= count (sprite-frames sprite)) (setZeroCount)])
    
-   (cond [(and (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
-         (bitmap/file (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite)))
+   (cond [(and
+           (< count (sprite-frames sprite))
+           (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
+           (addOneCount)
+           (bitmap/file
+               (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
+           )
          ]
    )
 )
 
 (define (render w gui sprite)
+
+   (set! actualGUI gui)
+   (set! actualSprite sprite)
 
    (cond [(equal? debug #t)  
                 ;Img                             ;X                           ;Y
@@ -372,26 +384,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
-  
-   (cond [(timelapse w 0 120)(render w intro emptyState)]
-         [(timelapse w 121 240)(render w title emptyState)]
-         [(timelapse w 241 360) (render w menu emptyState)]
-         [(timelapse w 361 600) (render w rename emptyState)]
-         [(timelapse w 601 720) (render w actions idleState)]
-         [else (render w menu emptyState)]
-   )
+
+    (cond [(timelapse w intro)   (render w intro emptyState)]
+          [(timelapse w title)   (render w title emptyState)]
+          [(timelapse w menu)    (render w menu emptyState)]
+          [(timelapse w rename)   (render w rename emptyState)]
+          [(timelapse w actions)   (render w actions idleState)]
+          [else (render w menu emptyState)]
+    )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (interactions w x y me)
+(define (mouse w x y me)
+ 
   (cond [(equal? debug #t) (writeln x) (writeln y)]) 
   
-  (cond [(and (timelapse w 241 360) (equal? me "button-down")) 361]
+  (cond [(and (equal? actualGUI "Menu")
+              (equal? me "button-down")) 361]
         [else w]
-))
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Keyboard Event Handlers ;;;;;;;;;;;
@@ -399,39 +414,51 @@
 
 (define (keyboard w key)
 
-   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
-  
-   (cond
-      [(key=? key "left") startFrame]
-      [(key=? key "right") endFrame]
-      [(key=? key "f8") (onOffDebug) w]
-      [(and  (key=? key "s") (not (timelapse w 361 600))) 0]
-      [(and (key=? key "\r") (timelapse w 361 600) ) 601]
-      [(and (and  (key=? key "\b") (timelapse w 361 600)) (not (equal? petName "")))
-                 (set! petName (substring petName 0 (sub1 (string-length petName))))
-                 (writeln (string-append "Key: " key))
-                 (writeln (string-append "String: " (string-titlecase petName)))
-                 w
-      ]
-      [(and (not (key=? key "shift"))(not (key=? key "\b")))
-                 (set! petName (string-append petName key))
-                 (writeln (string-append "Key: " key))
-                 (writeln (string-append "String: " (string-titlecase petName)))
-                 w
-      ]
-      [else w]
-   )
-)
+  (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
+
+  (cond [(key-event? key)
+
+         (cond
+           [(key=? key "left") (gui-start actualGUI)]
+           [(key=? key "right") (gui-end actualGUI)]
+    
+           [(key=? key "f8") (onOffDebug) w]
+           [(key=? key "f5") 0]
+
+           [(and (key=? key "\r")(isGUI? w menu)) (goTo w rename)]
+    
+           [(timelapse w rename)
+            (cond
+              
+              [(and (and  (key=? key "\b")) (not (equal? petName "")))
+               (set! petName (substring petName 0 (sub1 (string-length petName))))
+               (cond [(equal? debug #t)
+                      (writeln (string-append "Key: " key))
+                      (writeln (string-append "String: " (string-titlecase petName)))
+                      ])
+               w
+               ]
+              [(and (not (key=? key "shift")) (not (key=? key "\b")))
+               (set! petName (string-append petName key))
+               (cond [(equal? debug #t)
+                      (writeln (string-append "Key: " key))
+                      (writeln (string-append "String: " (string-titlecase petName)))
+                      ])
+               w
+               ]) 
+            ]
+           [else w]
+           )
+         ]
+        [else w]
+        )
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (engine w)
-  
-   (define (goto w a)
-      (- w (- w a))
-   )
 
    (define (start w)
       (+ w 1)
@@ -443,13 +470,10 @@
 
    (start w)
 
-   (cond [(= w 241) (pause)]
-         [(= w 361) (pause)]
-         [(= w 601) (pause)]
+   (cond [(= w 721) (pause)]
          [else (start w)]
    )
 )
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
@@ -458,9 +482,8 @@
 (big-bang 0
   (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
-  (on-mouse interactions)
-  ;(stop-when stop)
-  (state #f)
+  ;(on-mouse mouse)
+  ;(state #f)
   (on-key keyboard)
   (name "PandaSushi")
 )
