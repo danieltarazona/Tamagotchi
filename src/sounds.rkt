@@ -580,7 +580,8 @@
                       (writeln (string-append "String: " (string-titlecase petName)))
                       ])
                w
-               ]) 
+               ]
+              [(key=? key "\r") (goto w ) 
             ]
            [else w]
            )
