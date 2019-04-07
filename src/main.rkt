@@ -285,7 +285,7 @@
       (overlay/xy
         (overlay/xy
            (overlay/xy
-              (overlay/xy 
+              (overlay/xy
                 (overlay/xy
                 (overlay/xy  (text
                                 (string-append "Food "
@@ -324,9 +324,9 @@
                  550 0
                  (overlay/xy (text
                                 (string-append "Happy "
-                                   (number->string (vector-ref (pet-stats panda) 5)) "/5")
+                                   (number->string (vector-ref (pet-stats panda) 5)) "/10")
                                 12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 5))  20 "solid" "red") 0 0
+                             (overlay/xy (rectangle (* 10 (vector-ref (pet-stats panda) 5))  20 "solid" "red") 0 0
                                          (rectangle 100  20 "outline" "black"))))
     0 350
    (overlay/xy
