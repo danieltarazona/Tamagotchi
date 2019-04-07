@@ -86,7 +86,7 @@
 
 ;Nombres de los frames :
 
-;Muerte -> cuando el panda se muere cuando (-1 salud), no tiene interaciòn o la felicidad es 0 
+;Muerte -> el panda se muere cuando (-1 salud), no tiene interaciòn o la felicidad es 0 
 
 (cond
   [(< nivelSalud 1 (goto (frame stateDed)))]
@@ -94,51 +94,80 @@
   [( > goto 30000 (got (frame stateDed)))]
   )
 
-;Comer -> cuando el panda Cuando se alimenta a la mascota 1 vez su felicidad aumenta en 1, 2 veces la aumenta en 0 y 3 veces -1, lo enferma.
+;Comer -> Cuando se alimenta a la mascota 1 vez su felicidad aumenta en 1, 2 veces la aumenta en 0 y 3 veces -1, lo enferma.
 
 (cond
-  [(+ nivelComida 1)(+ 1 (vector-ref estadisticas nivelFelicidad) (goto (frame eat)))]
-  [(repeat (+ nivelComida 1))(+ 0 (vector-ref estadisticas nivelFelicidad) (goto (frame eat)))]
-  [(repeat (cond + nivelComida 1)(- 1 (vector-ref estadisticas nivelSalud)(goto (frame stateSickl))))
-   (cond
-     [(> goto "al frame de espera")(-2 (vector-ref estadisticas nivelFelicidad)(goto (frame shower)))]
-     [else (+ 1 (vector-ref estadisticas nivelFelicidad)(goto (frame shower)))]
-     )])
-
+  [(+ nivelComida 1)
+   (begin
+     (cond 
+     (+ 1 (vector-ref estadisticas nivelFelicidad) (goto (frame eat)))
+     [(repeat (+ nivelComida 1))(+ 0 (vector-ref estadisticas nivelFelicidad) (goto (frame eat)))]
+     [(repeat (cond + nivelComida 1)(- 1 (vector-ref estadisticas nivelSalud)(goto (frame stateSickl))))])
+     [(- 1 (vector-ref estadisticas nivelBano))(- 1 (vector-ref estadisticas nivelJuego))(- 1 (vector-ref estadisticas nivelSalud))
+                                               (- 1 (vector-ref estadisticas nivelMusica))])])
+     
+  
 
 ;Jugar -> Jugar una vez aumenta la felicidad en 2,
      ;jugar 2 veces le aumenta en 1
      ;3 veces no le aumenta ni disminuye felicidad pero le produce hambre disminuyendo su conteo de alimento en 2.
 
 (cond
-  [(+ nivelJuego 1)(+ 2 (vector-ref estadisticas nivelFelicidad) (goto (frame play)))]
-  [(repeat (+ nivelJuego 1))(+ 1 (vector-ref estadisticas nivelFelicidad)(goto (frame play)))]
-  [(repeat (+ nivelJuego 1))(- 2 (vector-ref estadisticas nivelComida)(goto (frame play)))]
-  )
+  [(+ nivelJuego 1)
+   (begin
+     (cond
+       (+ 2 (vector-ref estadisticas nivelFelicidad) (goto (frame play)))
+       [(repeat (+ nivelJuego 1))(+ 1 (vector-ref estadisticas nivelFelicidad)(goto (frame play)))]
+       [(repeat (+ nivelJuego 1))(- 2 (vector-ref estadisticas nivelComida)(goto (frame play)))])
+      [(- 1 (vector-ref estadisticas nivelBano))(- 1 (vector-ref estadisticas nivelComuda))(- 1 (vector-ref estadisticas nivelSalud))
+                                               (- 1 (vector-ref estadisticas nivelMusica))])])
+     
+     
+    
 
 
 ;Escuchar música -> una vez aumenta en 2 la felicidad, otra vez le aumenta en 1, y una tercera vez disminuye en 1, lo enferma, debe curarlo.
 
 (cond
-  [(+ nivelMusica 1)(+ 2 (vector-ref estadisticas nivelFelicidad)(goto (frame music)))]
-  [(repeat (+ nivelMusica 1))(+ 1 (vector-ref estadisticas nivelFelicidad)(goto (frame music)))]
-  [(repeat (+ nivelMusica 1))(- 1 (vector-ref estadisticas nivelSalud))(goto (frame stateSick))]
-  )
+  [(+ nivelMusica 1)
+   (begin
+     (cond
+       (+ 2 (vector-ref estadisticas nivelFelicidad)(goto (frame music)))
+       [(repeat (+ nivelMusica 1))(+ 1 (vector-ref estadisticas nivelFelicidad)(goto (frame music)))]
+       )[(repeat (+ nivelMusica 1))(- 1 (vector-ref estadisticas nivelSalud))(goto (frame stateSick))]
+         [(- 1 (vector-ref estadisticas nivelBano))(- 1 (vector-ref estadisticas nivelComuda))(- 1 (vector-ref estadisticas nivelSalud))
+                                               (- 1 (vector-ref estadisticas nivelJuego))])])
+     
+        
+  
 
 ;El baño le aumenta la felicidad en 2, la segunda vez no lo afecta y la tercera le disminuye en 1 enfermándolo, debe curarlo.
 
 (cond
-  [(+ nivelBano 1)(+ 2 (vector-ref estadisticas nivelFelicidad)(goto (frame shower)))]
-  [(repeat (+ nivelBano 1))(0 goto (frame shower))]
-  [(repeat (+ nivelBano 1))(- 1 (vector-ref estadisticas nivelSalud))(goto (frame stateSick))]
-  )
+  [(+ nivelBano 1)
+   (begin
+     (cond
+       (+ 2 (vector-ref estadisticas nivelFelicidad)(goto (frame shower)))
+       [(repeat (+ nivelBano 1))(0 goto (frame shower))]
+       [(repeat (+ nivelBano 1))(- 1 (vector-ref estadisticas nivelSalud))(goto (frame stateSick))])
+     [(- 1 (vector-ref estadisticas nivelMusica))(- 1 (vector-ref estadisticas nivelComuda))(- 1 (vector-ref estadisticas nivelSalud))
+                                               (- 1 (vector-ref estadisticas nivelJuego))])])
+     
+  
 
 ;Curar -> una vez le aumenta la felicidad en 3 y más veces no le afecta.
 
 (cond
-  [(+ nivelSalud 1)(+ 3 (vector-get estadisticas nivelFelicidad)(goto (frame heal)))]
-  [(repeat (+ nivelSalud 1))(goto (frame heal))]
-  )
+  [(+ nivelSalud 1)
+   (begin
+     (cond
+       (+ 3 (vector-get estadisticas nivelFelicidad)(goto (frame heal)))
+       [(repeat (+ nivelSalud 1))(goto (frame heal))])
+     [(- 1 (vector-ref estadisticas nivelMusica))(- 1 (vector-ref estadisticas nivelComuda))(- 1 (vector-ref estadisticas nivelBano))
+                                               (- 1 (vector-ref estadisticas nivelJuego))])])
+     
+     
+  
   
 ;Si el contador de alguna acción llega a 4 la mascota morirá, con excepción de curar.
 
