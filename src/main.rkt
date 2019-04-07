@@ -2,6 +2,7 @@
 
 (require 2htdp/universe)
 (require 2htdp/image)
+ (require racket/date)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global Variables ;;;;;;;;;;;;
@@ -20,6 +21,7 @@
 
 (define actualGUI empty)
 (define actualSprite empty)
+(define countGUI 0)
 (define count 0)
 (define search 0)
 
@@ -48,6 +50,22 @@
 (define stats (vector statFood statWash statGame statHeal statListen statHappy))
 
 (define panda (make-pet petName stats))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-struct posn (x y))
+(define-struct button (name img x y width height) #:transparent)
+
+(define-struct gui (name x y state [frames #:mutable] ui) #:transparent)
+
+(define-struct sprite (name
+                       x y
+                      [path   #:mutable] 
+                      [frames #:mutable]
+                       ext)   #:transparent)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
@@ -157,24 +175,6 @@
   (* (gridSizeX) x)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define-struct posn (x y))
-(define-struct button (name img x y width height) #:transparent)
-
-(define-struct gui    (name
-                       x y
-                      [start  #:mutable]                   
-                      [end    #:mutable]
-                       ui)    #:transparent)
-
-(define-struct sprite (name
-                       x y
-                      [path   #:mutable] 
-                      [frames #:mutable]
-                       ext)   #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
@@ -220,36 +220,33 @@
 (define sleepButton  (button "Sleep"      sleepImage 0 0 75 75))
 
 (define newGameButton  (button "New Game"
-                               (underlay/xy
-                                  (rectangle 100 80 "outline" "black") 0 0
-                                  (text "New Game" 20 "black"))
-                               0 0 75 75))
+                               (underlay/xy (text "New Game" 15 "black") 0 0
+                                            (rectangle 100 50 "outline" "black")) 0 0 100 50))
 
 (define continueButton (button "Continue"
-                               (underlay/xy
-                                  (rectangle 100 80 "outline" "black") 0 0
-                                  (text "Continue" 20 "black"))
-                               0 0 75 75))
+                               (underlay/xy (text "Continue" 15 "black") 0 0
+                                            (rectangle 100 50 "outline" "black")) 0 0 100 50))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (debugUI w)
   
-  (above (if showFrames
-             (text (string-append "Frame: " (number->string w)) 12 "black")
-                (text "" 10 "black"))
+  (above (text (string-append "CountSprite: " (number->string count))     12 "black")
+         (text (string-append "Frames: "      (number->string countGUI))  12 "black")
          (if showGUIName
-             (text (string-append "GUI: " (gui-name actualGUI)) 12 "black")
+             (text (string-append "GUI: "     (gui-name actualGUI))       12 "black")
                 (text "" 10 "black"))
          (if showSpriteName
-             (text (string-append "Sprite: " (sprite-name actualSprite)) 12 "black")
+             (text (string-append "Sprite: "  (sprite-name actualSprite)) 12 "black")
                 (text "" 10 "black"))
          (if showFPS
-             (text (string-append "FPS: " (number->string fps)) 12 "black")
+             (text (string-append "FPS: "     (number->string fps))       12 "black")
                 (text "" 10 "black"))
-         (text (string-append "Count: " (number->string count)) 12 "black")
+         (if showFrames
+             (text (string-append "State: "   (number->string w))         12 "black")
+                (text "" 10 "black"))    
   )         
 )
 
@@ -267,15 +264,13 @@
 )
 
 (define (menuUI w)
-  (overlay/offset
-         (button-img newGameButton)
-         0 50
+  (above (button-img newGameButton)
          (button-img continueButton)
   )
 )
 
 (define (renameUI w)
-  (above (text "Ingresa el nombre" 16 'black)
+  (above (text "Ingresa el nombre de tu mascota: " 16 'black)
          (text petName 24 'black)
   )
 )
@@ -351,11 +346,11 @@
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)   0    360  introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY)   360  720  titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)   720  1080 menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)   1080 1360 renameUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY)   1360 1715 actionsUI))
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0 300 introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY) 1 300 titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 2 300 menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 3 600 renameUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY) 4 600 actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
@@ -387,17 +382,24 @@
   (set! count (+ 1 count))
 )
 
+(define (addOneCountGUI)
+  (set! countGUI (+ 1 countGUI))
+)
+
 (define (setZeroCount)
   (set! count 0)
 )
 
-(define (goTo w x)
-  (cond [(gui? x)(gui-start x)])
+(define (setZeroCountGUI)
+  (set! countGUI 0)
 )
 
-(define (timelapse w x)
-  (cond [(and (>= w (gui-start x)) (<= w (gui-end x)))  #t]  
-        [else #f])
+(define (goTo x)
+  (cond [(gui? x) (gui-state x)])
+)
+
+(define (nextState w x)
+  (+ w 1)
 )
 
 (define (isSprite? [x "Main"])
@@ -407,8 +409,8 @@
   )
 )
 
-(define (isGUI? w x)
-  (cond [(and (>= w (gui-start x)) (<= w (gui-end x)))  #t]  
+(define (isGUI? w gui)
+  (cond [(= w (gui-state gui)) #t]
         [else #f])
 )
 
@@ -444,33 +446,28 @@
   )
 )
 
-(define (drawGui w ui)
-   (cond [(empty? ui) empty-image]
-         [else (ui w)]
+(define (drawGui w gui)
+   (addOneCountGUI)
+   (cond [(empty? gui) empty-image]
+         [else (gui w)]
    )
 )
 
 (define (drawSprite w sprite)
-  
-   (cond [(equal? debug #t)
-            (writeln (string-append "Count: " (number->string count)))
-            (writeln (string-append "Frame: " (number->string w)))
-         ]
-   )
-
-   (cond [(equal? (sprite-name sprite) "Empty") empty-image]
-         [else (set-sprite-path! sprite (spritePath sprite))
-               (cond [(= count (sprite-frames sprite)) (setZeroCount)])
-               (cond [(and
-                       (< count (sprite-frames sprite))
-                       (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
-                      (addOneCount)
-                      (bitmap/file
-                       (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
-                       )
-                      ]
-                     )
-         ]
+  (cond [(equal? (sprite-name sprite) "Empty") empty-image]
+        [else (set-sprite-path! sprite (spritePath sprite))
+              (cond [(= count (sprite-frames sprite)) (setZeroCount)])
+              (cond [(and
+                      (< count (sprite-frames sprite))
+                      (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
+                     (addOneCount)
+                     
+                     (bitmap/file
+                      (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
+                      )
+                     ]
+               )
+        ]
    )
 )
 
@@ -496,19 +493,22 @@
    ])
 )
 
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
 
-    (cond [(timelapse w intro)     (render w intro emptyState)]
-          [(timelapse w title)     (render w title emptyState)]
-          [(timelapse w menu)      (render w menu emptyState)]
-          [(timelapse w rename)    (render w rename emptyState)]
-          [(timelapse w actions)   (render w actions idleState)]
-          [else (render w actions idleState)]
-    )
+  
+    (cond [(= w 0) (render w intro emptyState)]
+          [(= w 1) (render w title  emptyState)]
+          [(= w 2) (render w menu  emptyState)]
+          [(= w 3) (render w rename  emptyState)]
+          [(= w 4) (render w actions  idleState)]
+          [else (render w actions  idleState)]
+    ) 
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -516,12 +516,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (isInside? x y button)
-  (cond [(or (and
-             (>= x (button-x button))
-             (<= x (+ (button-x button)(button-width button)))
+              
+  (cond [(and (and
+             (>= x (- (pinhole-x (center-pinhole (button-img button))) (/ (button-width button) 2)))
+             (<= x (+ (- (pinhole-x (center-pinhole (button-img button))) (/ (button-width button) 2)) (button-width button)))
          )   (and
-             (>= y (button-y button))
-             (<= y (+ (button-y button)(button-height button)))
+             (>= y (- (pinhole-y (center-pinhole (button-img button))) (/ (button-height button) 2)))
+             (<= y (+ (- (pinhole-y (center-pinhole (button-img button))) (/ (button-height button) 2)) (button-height button)))
              )
          )
          #t]
@@ -529,14 +530,21 @@
    )
 )
 
-(define (mouse w x y me)
- 
-  (cond [(equal? debug #t) (writeln x) (writeln y)]) 
+(define (click me)
   
-  (cond [(and (equal? actualGUI "Menu")
-              (equal? me "button-down")) 361]
-        [else w]
-  )
+   (cond [(equal? me "button-down") #t]
+         [else #t])
+)
+
+(define (mouse w x y me)
+
+  (cond [(equal? debug #t)
+         (writeln (string-append  "ME:" me))
+         (writeln (string-append  "X:" (number->string x) " Y:" (number->string y)))
+        ])
+
+  ;(cond [(and (and (isGUI? w menu) (isInside? x y newGameButton)) (click me)) (goTo w rename)])
+ 
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -547,43 +555,26 @@
 
   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
 
-  (cond [(key-event? key)
 
-         (cond
-           [(key=? key "left") (gui-start actualGUI)]
-           [(key=? key "right") (gui-end actualGUI)]
-    
-           [(key=? key "f8") (onOffDebug) w]
-           [(key=? key "f5") 0]
-
-           [(and (key=? key "\r")(isGUI? w menu)) (goTo w rename)]
-    
-           [(timelapse w rename)
-            (cond
-              
-              [(and (and  (key=? key "\b")) (not (equal? petName "")))
-               (set! petName (substring petName 0 (sub1 (string-length petName))))
-               (cond [(equal? debug #t)
-                      (writeln (string-append "Key: " key))
-                      (writeln (string-append "String: " (string-titlecase petName)))
-                      ])
-               w
-               ]
-              [(and (not (key=? key "shift")) (not (key=? key "\b")))
-               (set! petName (string-append petName key))
-               (cond [(equal? debug #t)
-                      (writeln (string-append "Key: " key))
-                      (writeln (string-append "String: " (string-titlecase petName)))
-                      ])
-               w
-               ]) 
-            ]
-           [else w]
-           )
-         ]
+  (cond [(isGUI? w rename)
+         (cond [(and  (key=? key "\b")) (not (equal? petName ""))
+            (set! petName (substring petName 0 (sub1 (string-length petName))))]
+        [(and (not (key=? key "shift")) (not (key=? key "\b")))
+            (set! petName (string-append petName key))]
         [else w]
-        )
-  )
+  )])
+  
+
+  (cond [(key=? key "left" ) (- w 1)]
+        [(key=? key "right") (+ w 1)]
+
+        [(key=? key "f5"   ) 0]
+        [(key=? key "f8"   ) (onOffDebug) w]
+        
+        [(key=? key "\r"   ) (+ w 1)]
+        [else w]
+  )    
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
@@ -591,19 +582,12 @@
 
 (define (engine w)
 
-   (define (start w)
-      (add1 w)
+   (define (next w)
+     (+ w 1)
    )
+
+   w
   
-   (define (pause)
-      w
-   )
-
-   (start w)
-
-   (cond [(= w 721) (pause)]
-         [else (start w)]
-   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
