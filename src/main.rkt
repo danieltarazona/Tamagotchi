@@ -26,6 +26,7 @@
 (define countGUI 0)
 (define count 0)
 (define search 0)
+(define play 0)
 
 (define debug #f)
 (define showFrames #t)
@@ -60,7 +61,7 @@
 (define-struct posn (x y))
 (define-struct button (name img x y width height) #:transparent)
 
-(define-struct gui (name x y state [frames #:mutable] ui) #:transparent)
+(define-struct gui (name x y state [frames #:mutable] time ui) #:transparent)
 
 (define-struct sprite (name
                        x y
@@ -350,11 +351,11 @@
 
 
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0 300 introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY) 1 300 titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 2 300 menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 3 600 renameUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY) 4 600 actionsUI))
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0 700 "next" introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY) 1 300 "next" titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 2 300 "pause" menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 3 600 "pause" renameUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY) 4 600 "pause" actionsUI))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -498,24 +499,23 @@
    ])
 )
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
-
-  (cond
-    [(= w 0)  (play-sound "C:/Users/alluv/tamagotchi/src/assets/mp3/epic intro.mp3" #t)])
   
-    (cond [(= w 0) (render w intro emptyState)]
-          [(= w 1) (render w title  emptyState)]
-          [(= w 2) (render w menu  emptyState)]
-          [(= w 3) (render w rename  emptyState)]
-          [(= w 4) (render w actions  idleState)]
-          [else (render w actions  idleState)]
-    ) 
+  (cond [(= play 0)
+           (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/epic.mp3")) #t)
+           (set! play 1)])
+           
+  (cond [(= w 0) (render w intro emptyState)]
+        [(= w 1) (render w title  emptyState)]
+        [(= w 2) (render w menu  emptyState)]
+        [(= w 3) (render w rename  emptyState)]
+        [(= w 4) (render w actions  idleState)]
+        [else (render w actions  idleState)]
+        ) 
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -570,15 +570,13 @@
             (set! petName (string-append petName key))]
         [else w]
   )])
-  
-
 
   (cond [(key=? key "left" ) (- w 1)]
         [(key=? key "right") (+ w 1)]
 
         [(key=? key "f5"   ) 0]
         [(key=? key "f8"   ) (onOffDebug) w]
-        
+
         [(key=? key "\r"   ) (+ w 1)]
         [else w]
   )    
@@ -589,13 +587,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (engine w)
-
+  
    (define (next w)
      (+ w 1)
    )
 
+   (define (pause w)
+     w
+   )
 
-   w 
+   (cond [(= (gui-frames actualGUI) countGUI) 
+          (cond [(equal? (gui-time actualGUI) "next" ) (setZeroCountGUI) (next w)]
+                [(equal? (gui-time actualGUI) "pause") (setZeroCountGUI) (pause w)]
+          )
+         ]
+         [else w]
+   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -605,7 +612,7 @@
 (big-bang 0
   (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
-  (on-mouse mouse)
+  ;(on-mouse mouse)
   ;(state #f)
   (on-key keyboard)
   (name "PandaSushi")
