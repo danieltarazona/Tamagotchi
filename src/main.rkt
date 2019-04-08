@@ -503,6 +503,10 @@
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (setState state gui w [message emptyState])  
+  (render w actions state message)
+)
+
 (define (gameplay w)
   
   (cond [(= play 0)
@@ -513,8 +517,8 @@
         [(= w 1) (render w title  emptyState)]
         [(= w 2) (render w menu  emptyState)]
         [(= w 3) (render w rename  emptyState)]
-        [(= w 4) (render w actions  idleState)]
-        [else (render w actions  idleState)]
+        [(= w 4) (setState idleState actions w)]
+        [else (setState idleState actions w)]
         ) 
 )
 

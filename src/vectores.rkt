@@ -1,20 +1,21 @@
 #lang racket
 
-(define estadisticas (vector 6 0))
+(define statFood   5)
+(define statWash   5)
+(define statGame   5)
+(define statHeal   5)
+(define statListen 5)
+(define statHappy  10)
 
-(define nivelComida    10)
-(define nivelBano      10)
-(define nivelJuego     10)
-(define nivelSalud     10)
-(define nivelMusica    10)
-(define nivelFelicidad 10)
+(define stats (vector statFood statWash statGame statHeal statListen statHappy))
 
-(vector-ref estadisticas nivelComida); así se llaman los vectores dentro de las funciones
-
-
-(define-struct MUNDO (vector universe functions)); aquí definé lo que debe tener cada mundo
+;(vector-ref estadisticas nivelComida); así se llaman los vectores dentro de las funciones
+;
+;
+;(define-struct MUNDO (vector universe functions)); aquí definé lo que debe tener cada mundo
 
 ;;Definí lo que aumenta y disminuye con cada estado;;;;
+
 
 ;nivelComida : +1 apetito
 ;              +1 felicidad
@@ -42,40 +43,50 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;CONDICIONES DE IMAGENES;;;;;;;;;;;;;;;;;;;
 
-(define-struct tamagotchi (nombre image estadisticas)) 
+;(define-struct tamagotchi (nombre image estadisticas)) 
+;
+;(define nombre 0)
+;
+;(define imagen 0)
 
-(define nombre 0)
-
-(define imagen 0)
-
-
-(define (eat)  
-  (set! image (animacion-eat)) ;cada vez que el usuario presione la tecla destinada para comer, mostrara esta animacion
+(define (setIdleState w [message emptyState])  
+ (render w actions idleState message)
 )
 
-(define (shower)
-  (set! image (animacion-shower)) ;cada vez que el usuario presione la tecla destinada para ir al baño, mostrara esta animacion
+;cada vez que el usuario presione la tecla destinada para comer, mostrara esta animacion
+(define (setEatState w)  
+ (render w actions eatState) 
 )
 
-(define (play)
-  (set! image (animacion-play)) ;cada vez que el usuario presione la tecla destinada para jugar, mostrara esta animacion
+ ;cada vez que el usuario presione la tecla destinada para ir al baño, mostrara esta animacion
+(define (setWashState)
+  (render w actions washState) 
 )
 
-(define (music)
-  (set! image (animacion-music)) ;cada vez que el usuario presione la tecla destinada para escuchar musica, mostrara esta animacion
+;cada vez que el usuario presione la tecla destinada para jugar, mostrara esta animacion
+(define (setGameState)
+  (render w actions gameState) 
 )
 
-(define (heal)
-  (set! image (animacion-heal)) ;cada vez que el usuario presione la tecla destinada para curar, mostrara esta animacion
+;cada vez que el usuario presione la tecla destinada para escuchar musica, mostrara esta animacion
+(define (setListenState)
+  (render w actions listenState) 
 )
 
-(define (stateSick)
-  (set! image (animacion-sick)) ;cada vez que el estado del tamago llegue a enfermo, mostrara esta animacion
+;cada vez que el usuario presione la tecla destinada para curar, mostrara esta animacion
+(define (setHealState)
+  (render w actions healState) 
 )
 
-(define (stateDed)
-  (set! image (animacion-ded)) ; ;cada vez que el estado del tamago llegue a muerto, mostrara esta animacion
- )
+;cada vez que el estado del tamago llegue a enfermo, mostrara esta animacion
+(define (setSickState)
+   (render w actions sickState) 
+)
+
+;cada vez que el estado del tamago llegue a muerto, mostrara esta animacion
+(define (setDedState)
+  (render w actions dedState)  
+)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;CONDICIONES PARA CAMBIAR DE MUNDO;;;;;;;;;;;;;;;;
