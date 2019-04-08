@@ -261,14 +261,20 @@
 )
 
 (define (titleUI w)
-  (above (text "Tamagotchi" 60 "purple")
-         (text "Play" 40 "purple")
-  )
+  (set! background (rectangle 768 432 "solid" "black"))
+  (bitmap/file (string-append assets "/img/background/title-pixel.png"))
 )
 
 (define (menuUI w)
-  (above (button-img newGameButton)
+  (set! background (rectangle 768 432 "solid" "white"))
+  (overlay/offset
+     (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))
+     0 75
+     (overlay/offset
+         (button-img newGameButton)
+         0 75
          (button-img continueButton)
+     )
   )
 )
 
