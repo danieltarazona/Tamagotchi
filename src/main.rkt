@@ -23,10 +23,12 @@
 
 (define actualGUI empty)
 (define actualSprite empty)
+(define life 0)
 (define countGUI 0)
 (define count 0)
 (define search 0)
 (define play 0)
+(define musicPlayer #f)
 
 (define debug #f)
 (define showFrames #t)
@@ -183,15 +185,15 @@
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (define emptyState  (sprite "Empty"  (screenCenterX) (screenCenterY) "" 1    ".png"))
-(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define happyState  (sprite "Happy"  (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define sadState    (sprite "Sad"    (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define sickState   (sprite "Sick"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define hungryState (sprite "Hungry" (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define dirtyState  (sprite "Diry"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 120  ".png"))
+
+(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 1  ".png"))
+(define gameState   (sprite "Game"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define washState   (sprite "Wash"   (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define dedState    (sprite "Ded"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,13 +271,18 @@
   (set! background (rectangle 768 432 "solid" "white"))
   (overlay/offset
      (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))
-     0 75
+     0 150
      (overlay/offset
          (button-img newGameButton)
          0 75
          (button-img continueButton)
      )
   )
+)
+
+(define (birthUI w)
+  (set! background (rectangle 768 432 "solid" "white"))
+  (button-img continueButton)
 )
 
 (define (renameUI w)
@@ -355,14 +362,12 @@
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY) 0 700 "next" introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY) 1 300 "next" titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY) 2 300 "pause" menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY) 3 600 "pause" renameUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY) 4 600 "pause" actionsUI))
-
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)  0 680 "next" introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY)  1 300 "next" titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)  2 300 "pause" menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)  3 600 "pause" renameUI))
+(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)  4 600 "next"  birthUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY)  5 600 "pause" actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
@@ -509,23 +514,33 @@
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (setState state gui w [message emptyState])  
-  (render w actions state message)
+(define (onOffMusicPlayer)
+   (cond [(equal? musicPlayer #t) (set! musicPlayer #f)]
+         [else (set! musicPlayer #t)]
+   )
 )
 
 (define (gameplay w)
   
-  (cond [(= play 0)
+  (cond [(and (= w 0) (equal? musicPlayer #f))
            (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/epic.mp3")) #t)
-           (set! play 1)])
+           (set! musicPlayer #t)])
+
+  (cond [(and (= w 7) (equal? musicPlayer #f))
+           (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/panda.mp3")) #t)
+           (set! musicPlayer #t)])
            
-  (cond [(= w 0) (render w intro emptyState)]
-        [(= w 1) (render w title  emptyState)]
-        [(= w 2) (render w menu  emptyState)]
+  (cond [(= w 0) (render w intro   emptyState)]
+        [(= w 1) (render w title   emptyState)]
+        [(= w 2) (onOffMusicPlayer) (render w menu    emptyState)]
         [(= w 3) (render w rename  emptyState)]
-        [(= w 4) (setState idleState actions w)]
-        [else (setState idleState actions w)]
-        ) 
+        
+        [(= w 4) (render w birth   eggState)]
+        [(= w 5) (render w actions idleState)]
+        [(= w 6) (render w actions eatState)]
+        [(= w 7) (render w actions listenState)]
+        [else    (render w actions idleState)]
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -583,6 +598,8 @@
 
   (cond [(key=? key "left" ) (- w 1)]
         [(key=? key "right") (+ w 1)]
+        [(key=? key "c") 6]
+        [(key=? key "m") (onOffMusicPlayer) 7]
 
         [(key=? key "f5"   ) 0]
         [(key=? key "f8"   ) (onOffDebug) w]
