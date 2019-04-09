@@ -29,6 +29,7 @@
 (define search 0)
 (define play 0)
 (define musicPlayer #f)
+(define pixelate #t)
 
 (define debug #f)
 (define showFrames #t)
@@ -41,7 +42,7 @@
 ;;;;;;;;;;; Game Variables ;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define petName "Panda")
+(define petname "Panda")
 
 (define-struct pet ([name #:mutable] stats))
 
@@ -54,7 +55,7 @@
 
 (define stats (vector statFood statWash statGame statHeal statListen statHappy))
 
-(define panda (make-pet petName stats))
+(define panda (make-pet petname stats))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
@@ -70,7 +71,6 @@
                       [path   #:mutable] 
                       [frames #:mutable]
                        ext)   #:transparent)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
@@ -189,11 +189,11 @@
 (define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 1    ".png"))
+(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 
 (define gameState   (sprite "Game"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define washState   (sprite "Wash"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define dedState    (sprite "Ded"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -210,19 +210,16 @@
 ;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define foodImage  (bitmap/file (string-append assets "img/ui/food.png")))
-(define gameImage  (bitmap/file (string-append assets "img/ui/game.png")))
-(define songImage  (bitmap/file (string-append assets "img/ui/song.png")))
-(define healImage  (bitmap/file (string-append assets "img/ui/heal.png")))
-(define washImage  (bitmap/file (string-append assets "img/ui/wash.png")))
-(define sleepImage (bitmap/file (string-append assets "img/ui/sleep.png")))
+(define (getButtonImage buttonName)
+       (bitmap/file (string-append assets "img/ui/" buttonName ".png"))
+)
 
-(define eatButton    (button "Eat"        foodImage  0 0 75 75))
-(define gameButton   (button "Game"       gameImage  0 0 75 75))
-(define listenButton (button "Listen"     songImage  0 0 75 75))
-(define healButton   (button "Heal"       healImage  0 0 75 75))
-(define washButton   (button "Wash"       washImage  0 0 75 75))
-(define sleepButton  (button "Sleep"      sleepImage 0 0 75 75))
+(define eatButton    (button "Eat"    (getButtonImage "eat")     0 0 75 75))
+(define gameButton   (button "Game"   (getButtonImage "game")    0 0 75 75))
+(define listenButton (button "Listen" (getButtonImage "listen")  0 0 75 75))
+(define healButton   (button "Heal"   (getButtonImage "heal")    0 0 75 75))
+(define washButton   (button "Wash"   (getButtonImage "wash")    0 0 75 75))
+(define sleepButton  (button "Sleep"  (getButtonImage "sleep")   0 0 75 75))
 
 (define newGameButton  (button "New Game"
                                (underlay/xy (text "New Game" 15 "black") 0 0
@@ -264,13 +261,19 @@
 
 (define (titleUI w)
   (set! background (rectangle 768 432 "solid" "black"))
-  (bitmap/file (string-append assets "/img/background/title-pixel.png"))
+  (cond [(equal? pixelate #t)
+            (bitmap/file (string-append assets "/img/background/title-pixel.png"))]
+           [else (bitmap/file (string-append assets "/img/background/title.png"))]
+  )
 )
 
 (define (menuUI w)
   (set! background (rectangle 768 432 "solid" "white"))
   (overlay/offset
-     (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))
+     (cond [(equal? pixelate #t)
+            (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))]
+           [else (scale 0.75 (bitmap/file (string-append assets "/img/background/title.png"))) ]
+     )
      0 150
      (overlay/offset
          (button-img newGameButton)
@@ -282,12 +285,14 @@
 
 (define (birthUI w)
   (set! background (rectangle 768 432 "solid" "white"))
-  (button-img continueButton)
+  (overlay/offset
+     (button-img continueButton) 0 -200 (rectangle 0 0 "outline" "white")
+  )
 )
 
 (define (renameUI w)
   (above (text "Ingresa el nombre de tu mascota: " 16 'black)
-         (text petName 24 'black)
+         (text (pet-name panda) 24 'black)
   )
 )
 
@@ -362,11 +367,11 @@
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)  0 680 "next" introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY)  1 300 "next" titleUI))
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)  0 680 "next"  introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY)  1 300 "next"  titleUI))
 (define menu    (gui "Menu"    (screenCenterX) (screenCenterY)  2 300 "pause" menuUI))
 (define rename  (gui "Rename"  (screenCenterX) (screenCenterY)  3 600 "pause" renameUI))
-(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)  4 600 "next"  birthUI))
+(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)  4 600 "pause"  birthUI))
 (define actions (gui "Actions" (screenCenterX) (screenCenterY)  5 600 "pause" actionsUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -435,9 +440,16 @@
 ;;;;;;;;;; Helper Functions GUI ;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (onOffPixelate)
+   (cond [(equal? pixelate #t) (set! pixelate #f)]
+         [else (set! pixelate #t)]
+   )
+)
+
 (define (spritePath sprite)
-  (cond [(sprite? sprite)
+  (cond [(and (sprite? sprite) (equal? pixelate #f))
             (string-append assets "sprites/" (string-downcase (sprite-name sprite)) "/")]
+        [else (string-append assets "sprites/" (string-downcase (sprite-name sprite)) "/pixelart/")]
   )
 )
 
@@ -524,21 +536,23 @@
   
   (cond [(and (= w 0) (equal? musicPlayer #f))
            (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/epic.mp3")) #t)
-           (set! musicPlayer #t)])
+           (set! musicPlayer #t)]
+        [(= w 0) (render w intro   emptyState)]
+  )
+
+  (cond [(= w 2) (onOffMusicPlayer) (render w menu emptyState)])
 
   (cond [(and (= w 7) (equal? musicPlayer #f))
            (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/panda.mp3")) #t)
-           (set! musicPlayer #t)])
+           (set! musicPlayer #t)]
+        [(= w 7) (render w actions listenState)]
+  )
            
-  (cond [(= w 0) (render w intro   emptyState)]
-        [(= w 1) (render w title   emptyState)]
-        [(= w 2) (onOffMusicPlayer) (render w menu    emptyState)]
+  (cond [(= w 1) (render w title   emptyState)]
         [(= w 3) (render w rename  emptyState)]
-        
         [(= w 4) (render w birth   eggState)]
         [(= w 5) (render w actions idleState)]
         [(= w 6) (render w actions eatState)]
-        [(= w 7) (render w actions listenState)]
         [else    (render w actions idleState)]
   )
 )
@@ -589,10 +603,15 @@
 
 
   (cond [(isGUI? w rename)
-         (cond [(and  (key=? key "\b")) (not (equal? petName ""))
-            (set! petName (substring petName 0 (sub1 (string-length petName))))]
-        [(and (not (key=? key "shift")) (not (key=? key "\b")))
-            (set! petName (string-append petName key))]
+         (cond [(and  (key=? key "\b")) (not (equal? (pet-name panda) ""))
+            (set-pet-name! panda
+                           (substring (pet-name panda) 0 (sub1 (string-length (pet-name panda)))))]
+        [(and (not (key=? key "shift"))
+              (not (key=? key "\b"))
+              (not (key=? key "left"))
+              (not (key=? key "right")))
+            (set-pet-name! panda
+                           (string-append (pet-name panda) key))]
         [else w]
   )])
 
@@ -600,6 +619,7 @@
         [(key=? key "right") (+ w 1)]
         [(key=? key "c") 6]
         [(key=? key "m") (onOffMusicPlayer) 7]
+        [(key=? key "p") (onOffPixelate) w]
 
         [(key=? key "f5"   ) 0]
         [(key=? key "f8"   ) (onOffDebug) w]
