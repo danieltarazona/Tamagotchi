@@ -189,8 +189,8 @@
 (define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 1    ".png"))
 
-(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 1  ".png"))
 (define gameState   (sprite "Game"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define washState   (sprite "Wash"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
