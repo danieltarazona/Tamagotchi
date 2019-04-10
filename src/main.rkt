@@ -188,7 +188,7 @@
 (define emptyState  (sprite "Empty"  (screenCenterX) (screenCenterY) "" 1    ".png"))
 (define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 120  ".png"))
+(define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 420  ".png"))
 (define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120  ".png"))
 (define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
 
