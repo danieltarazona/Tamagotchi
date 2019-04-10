@@ -1,0 +1,6 @@
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/eat"
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/egg"
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/empty"
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/heal"
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/idle"
+~/tamagotchi/src/scripts/pixelate.sh "tamagotchi/src/assets/sprites/listen"
