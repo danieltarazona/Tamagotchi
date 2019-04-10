@@ -51,11 +51,19 @@
 (define statGame   5)
 (define statHeal   5)
 (define statListen 5)
-(define statHappy  10)
+(define statHappy  5)
 
 (define stats (vector statFood statWash statGame statHeal statListen statHappy))
 
 (define panda (make-pet petname stats))
+
+(define introSong
+  (string->path (string-append (path->string (current-directory)) "assets/mp3/epic.mp3"))
+)
+
+(define listenSong
+  (string->path (string-append (path->string (current-directory)) "assets/mp3/panda.mp3"))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
@@ -63,14 +71,8 @@
 
 (define-struct posn (x y))
 (define-struct button (name img x y width height) #:transparent)
-
 (define-struct gui (name x y state [frames #:mutable] time ui) #:transparent)
-
-(define-struct sprite (name
-                       x y
-                      [path   #:mutable] 
-                      [frames #:mutable]
-                       ext)   #:transparent)
+(define-struct sprite (name x y [path   #:mutable] [frames #:mutable] state ext) #:transparent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Debugging Tools ;;;;;;;;;;;;;
@@ -180,32 +182,6 @@
   (* (gridSizeX) x)
 )
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define emptyState  (sprite "Empty"  (screenCenterX) (screenCenterY) "" 1    ".png"))
-(define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 420  ".png"))
-(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-
-(define gameState   (sprite "Game"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define washState   (sprite "Wash"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define dedState    (sprite "Ded"    (screenCenterX) (screenCenterY) "" 120  ".png"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;; Messages ;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define sadMessage    (sprite "SadCloud"    (screenCenterX) (screenCenterY) "" 1    ".png"))
-(define happyMessage  (sprite "HappyCloud"  (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define hungryMessage (sprite "HungryCloud" (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define sickMessage   (sprite "SickCloud"   (screenCenterX) (screenCenterY) "" 120  ".png"))
-(define dirtyMessage  (sprite "DirtyCloud"  (screenCenterX) (screenCenterY) "" 120  ".png"))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; Buttons ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -235,9 +211,7 @@
 
 (define (debugUI w)
   
-  (above (text (string-append "CountSprite: " (number->string count))     12 "black")
-         (text (string-append "Frames: "      (number->string countGUI))  12 "black")
-         (if showGUIName
+  (above (if showGUIName
              (text (string-append "GUI: "     (gui-name actualGUI))       12 "black")
                 (text "" 10 "black"))
          (if showSpriteName
@@ -248,7 +222,13 @@
                 (text "" 10 "black"))
          (if showFrames
              (text (string-append "State: "   (number->string w))         12 "black")
-                (text "" 10 "black"))    
+                (text "" 10 "black"))
+         (if musicPlayer
+             (text "Music: On" 12 "black")
+                (text "Music: Off" 12 "black"))
+         (text (string-append "CountSprite: " (number->string count))     12 "black")
+         (text (string-append "CountGUI: "    (number->string countGUI))  12 "black")
+         (text (string-append "Lifetime: "    (number->string life))  12 "black")
   )         
 )
 
@@ -290,61 +270,22 @@
   )
 )
 
+(define (sleepUI w)
+  (set! background (rectangle 768 432 "solid" "black"))
+  (overlay/offset
+      (button-img sleepButton)
+      0 -200
+      (rectangle 768 432 "solid" "black")
+  )
+)
+
 (define (renameUI w)
   (above (text "Ingresa el nombre de tu mascota: " 16 'black)
          (text (pet-name panda) 24 'black)
   )
 )
 
-(define (actionsUI w)
-  (overlay/offset
-      (overlay/xy
-        (overlay/xy
-           (overlay/xy
-              (overlay/xy
-                (overlay/xy
-                (overlay/xy  (text
-                                (string-append "Food "
-                                   (number->string (vector-ref (pet-stats panda) 0)) "/5")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 0))  20 "solid" "red") 0 0
-                                        (rectangle 100  20 "outline" "black")))
-                110 0
-                (overlay/xy  (text
-                                (string-append "Clean "
-                                   (number->string (vector-ref (pet-stats panda) 1)) "/5")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 1))  20 "solid" "red") 0 0
-                                        (rectangle 100  20 "outline" "black"))))
-                220 0
-                (overlay/xy  (text
-                                (string-append "Game "
-                                   (number->string (vector-ref (pet-stats panda) 2)) "/5")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 2))  20 "solid" "red") 0 0
-                                        (rectangle 100  20 "outline" "black"))))
-                330 0
-                (overlay/xy  (text
-                                (string-append "Heal "
-                                   (number->string (vector-ref (pet-stats panda) 3)) "/5")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 3))  20 "solid" "red") 0 0
-                                        (rectangle 100  20 "outline" "black"))))
-                 440 0
-                (overlay/xy  (text
-                                (string-append "Listen "
-                                   (number->string (vector-ref (pet-stats panda) 4)) "/5")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red") 0 0
-                                        (rectangle 100  20 "outline" "black"))))
-                 550 0
-                 (overlay/xy (text
-                                (string-append "Happy "
-                                   (number->string (vector-ref (pet-stats panda) 5)) "/10")
-                                12 "black") -25 0
-                             (overlay/xy (rectangle (* 10 (vector-ref (pet-stats panda) 5))  20 "solid" "red") 0 0
-                                         (rectangle 100  20 "outline" "black"))))
-    0 350
+(define (buttonsUI w)
    (overlay/xy
    (overlay/xy 
    (overlay/xy 
@@ -359,20 +300,128 @@
                440 0
                (button-img washButton))
                550 0
-               (button-img sleepButton))
+               (button-img sleepButton)
    )
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (barsUI w)
+  (overlay/xy
+   (overlay/xy
+    (overlay/xy
+     (overlay/xy
+      (overlay/xy
+       (overlay/xy
+        (text
+         (string-append "Food "
+                        (number->string (vector-ref (pet-stats panda) 0)) "/5")
+         12 "black") -25 0
+                     (overlay/xy
+                      (rectangle (* 20 (vector-ref (pet-stats panda) 0))  20 "solid" "red")
+                      0 0
+                      (rectangle 100  20 "outline" "black"))
+                     )
+       110 0
+       (overlay/xy
+        (text
+         (string-append "Clean "
+                        (number->string (vector-ref (pet-stats panda) 1)) "/5")
+         12 "black") -25 0
+                     (overlay/xy
+                      (rectangle (* 20 (vector-ref (pet-stats panda) 1))  20 "solid" "red")
+                      0 0
+                      (rectangle 100  20 "outline" "black"))
+                     )
+       )
+      220 0
+      (overlay/xy
+       (text
+        (string-append "Game "
+                       (number->string (vector-ref (pet-stats panda) 2)) "/5")
+        12 "black") -25 0
+                    (overlay/xy
+                     (rectangle (* 20 (vector-ref (pet-stats panda) 2))  20 "solid" "red")
+                     0 0
+                     (rectangle 100  20 "outline" "black"))
+                    )
+      )
+     330 0
+     (overlay/xy
+      (text
+       (string-append "Heal "
+                      (number->string (vector-ref (pet-stats panda) 3)) "/5")
+       12 "black") -25 0
+                   (overlay/xy
+                    (rectangle (* 20 (vector-ref (pet-stats panda) 3))  20 "solid" "red")
+                    0 0
+                    (rectangle 100  20 "outline" "black"))
+                   )
+     )
+    440 0
+    (overlay/xy
+     (text
+      (string-append "Listen "
+                     (number->string (vector-ref (pet-stats panda) 4)) "/5")
+      12 "black") -25 0
+                  (overlay/xy
+                   (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red")
+                   0 0
+                   (rectangle 100  20 "outline" "black"))
+                  )
+    )
+   550 0
+   (overlay/xy
+    (text
+     (string-append "Happy "
+                    (number->string (vector-ref (pet-stats panda) 5)) "/10")
+     12 "black") -25 0
+                 (overlay/xy
+                  (rectangle (* 10 (vector-ref (pet-stats panda) 5))  20 "solid" "red")
+                  0 0
+                  (rectangle 100  20 "outline" "black"))
+                 )
+   )
+)
+
+(define (actionsUI w)
+   (overlay/offset (barsUI w) 0 320 (buttonsUI w))
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)  0 680 "next"  introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY)  1 300 "next"  titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)  2 300 "pause" menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)  3 600 "pause" renameUI))
-(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)  4 600 "pause"  birthUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY)  5 600 "pause" actionsUI))
+(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)    0  680 "next"   introUI))
+(define title   (gui "Title"   (screenCenterX) (screenCenterY)    1  360 "next"   titleUI))
+(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)    2  120 "pause"  menuUI))
+(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)    3  120 "pause"  renameUI))
+(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)    4  120 "pause"  birthUI))
+(define sleep   (gui "Sleep"   (screenCenterX) (screenCenterY)    12 600 "pause"  sleepUI))
+(define bars    (gui "Bars"    (screenCenterX) (screenOffsetY 1)  0  420 "idle"    barsUI))
+(define actions (gui "Actions" (screenCenterX) (screenCenterY)    0  420 "pause"   actionsUI))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define eggState    (sprite "Egg"    (screenCenterX) (screenCenterY) "" 120 4  ".png"))
+(define idleState   (sprite "Idle"   (screenCenterX) (screenCenterY) "" 120 5  ".png"))
+(define eatState    (sprite "Eat"    (screenCenterX) (screenCenterY) "" 120 6  ".png"))
+(define listenState (sprite "Listen" (screenCenterX) (screenCenterY) "" 420 7  ".png"))
+(define healState   (sprite "Heal"   (screenCenterX) (screenCenterY) "" 120 8  ".png"))
+(define gameState   (sprite "Game"   (screenCenterX) (screenCenterY) "" 180 9  ".png"))
+(define washState   (sprite "Wash"   (screenCenterX) (screenCenterY) "" 240 10 ".png"))
+(define deadState   (sprite "Dead"   (screenCenterX) (screenCenterY) "" 120 11 ".png"))
+(define emptyState  (sprite "Empty"  (screenCenterX) (screenCenterY) "" 1   0 ".png"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;; Messages ;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define sadMessage    (sprite "SadCloud"    (screenCenterX) (screenCenterY) "" 1   0 ".png"))
+(define happyMessage  (sprite "HappyCloud"  (screenCenterX) (screenCenterY) "" 120 0 ".png"))
+(define hungryMessage (sprite "HungryCloud" (screenCenterX) (screenCenterY) "" 120 0 ".png"))
+(define sickMessage   (sprite "SickCloud"   (screenCenterX) (screenCenterY) "" 120 0 ".png"))
+(define dirtyMessage  (sprite "DirtyCloud"  (screenCenterX) (screenCenterY) "" 120 0 ".png"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Helper Functions ;;;;;;;;;;
@@ -418,10 +467,6 @@
 
 (define (goTo x)
   (cond [(gui? x) (gui-state x)])
-)
-
-(define (nextState w x)
-  (+ w 1)
 )
 
 (define (isSprite? [x "Main"])
@@ -475,7 +520,7 @@
   )
 )
 
-(define (drawGui w gui)
+(define (drawGUI w gui)
    (addOneCountGUI)
    (cond [(empty? gui) empty-image]
          [else (gui w)]
@@ -483,20 +528,20 @@
 )
 
 (define (drawSprite w sprite)
+        
   (cond [(equal? (sprite-name sprite) "Empty") empty-image]
         [else (set-sprite-path! sprite (spritePath sprite))
               (cond [(= count (sprite-frames sprite)) (setZeroCount)])
               (cond [(and
                       (< count (sprite-frames sprite))
                       (string? (sprite-path sprite)) (not (equal? (sprite-path sprite) "")))
-                     (addOneCount)
-                     
-                     (bitmap/file
+                      (addOneCount)
+                      (bitmap/file
                       (string-append (sprite-path sprite) (number->string count) (sprite-ext sprite))
                       )
                      ]
-               )
-        ]
+                    )
+              ]
    )
 )
 
@@ -507,79 +552,172 @@
 
    (cond [(equal? debug #t)  
                 ;Img                             ;X                           ;Y
-   (place-image (frame (drawGrid))               (screenCenterX)             (screenCenterY)    ; Grid Layer
-   (place-image (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1)  ; Debug Layer
-   (place-image (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8)  ; Timeline Layer
-   (place-image (frame (drawGui w (gui-ui gui))) (gui-x gui)                 (gui-y gui)        ; GUI Layer
-   (place-image (frame (drawSprite w message))   (sprite-x message)          (sprite-y message) ; Notification Layer
-   (place-image (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer
-                                                 (drawBackground w background)))))))            ; Background Layer
-         ][(equal? debug #f)
-   (place-image (drawGui w (gui-ui gui))         (gui-x gui)                 (gui-y gui)        ; GUI Layer
-   (place-image (drawSprite w message)           (sprite-x message)          (sprite-y message) ; Notification Layer
-   (place-image (drawSprite w sprite)            (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer 
-                                                 (drawBackground w background))))
-   ])
+   (place-image
+    (frame (drawGrid))               (screenCenterX)             (screenCenterY)    ; Grid Layer
+   (place-image
+    (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1)  ; Debug Layer
+   (place-image
+    (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8)  ; Timeline
+   (place-image
+    (frame (drawGUI w (gui-ui gui))) (gui-x gui)                 (gui-y gui)        ; GUI Layer
+   (place-image
+    (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer
+                                     (drawBackground w background))))))]           ; Background
+
+   [(equal? debug #f)
+   (place-image
+      (drawGUI w (gui-ui gui)) (gui-x gui) (gui-y gui) ; GUI Layer
+   (place-image
+      (drawSprite w sprite) (sprite-x sprite) (sprite-y sprite) ; Sprite Layer 
+         (drawBackground w background)))]
+   )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (restart)
+     (setZeroCount)
+     (setZeroCountGUI)
+   )
+
+(define (onMusicPlayer)
+   (cond [(equal? musicPlayer #f) (set! musicPlayer #t)])
+)
+
+(define (offMusicPlayer)
+   (cond [(equal? musicPlayer #t) (set! musicPlayer #f)])
+)
+
 (define (onOffMusicPlayer)
-   (cond [(equal? musicPlayer #t) (set! musicPlayer #f)]
-         [else (set! musicPlayer #t)]
+   (cond [(equal? musicPlayer #f) (set! musicPlayer #t)]
+         [else (set! musicPlayer #f)]
    )
 )
 
 (define (gameplay w)
+
+  ;;;Intro and Music;;;
+  (define (introScene)
+     (cond [(equal? musicPlayer #f)
+            (onMusicPlayer) 
+            (play-sound introSong #t)
+        ]
+     )
+     (render w intro emptyState)
+  )
+
+  ;;;Title;;;
+  (define (titleScene)
+     (render w title emptyState)
+  )
+
+  ;;;Menu;;;
+  (define (menuScene)
+     (cond [(equal? musicPlayer #t)
+            (offMusicPlayer)
+           ]
+     )
+     (render w menu emptyState)
+  )
+
+  ;;;Rename;;;
+  (define (renameScene)
+     (render w rename emptyState)
+  )
+
+  ;;;EggState;;;
+  (define (eggScene)
+     (render w birth eggState)
+  )
+
+  ;;;IdleState and Lifetime;;;
+  (define (idleScene)
+     (offMusicPlayer)
+     (lifetime)
+     (render w actions idleState) 
+  )
+
+  ;;;ListenState;;;
+  (define (listenScene)
+    (cond [(equal? musicPlayer #f)
+           (onMusicPlayer)
+           (play-sound listenSong #t)
+          ]
+    )
+    (lifetime)
+    (render w bars listenState)
+  )
+
+  ;;;EatState;;;
+  (define (eatScene)
+    (lifetime)
+    (render w bars eatState)
+  )
+
+  ;;;WashState;;;
+  (define (washScene)
+    (lifetime)
+    (render w bars washState)
+  )
+
+  ;;;GameState;;;
+  (define (gameScene)
+    (lifetime)
+    (render w bars gameState)
+  )
+
+  ;;;HealState;;;
+  (define (healScene)
+    (lifetime)
+    (render w bars healState)
+  )
+
+  ;;;HealState;;;
+  (define (sleepScene)
+    (lifetime)
+    (render w sleep emptyState)
+  )
+
+  ;;;HealState;;;
+  (define (deadScene)
+    (render w birth deadState)
+  )
+
+  ;;;Stats;;;
+  (define (lifetime)
+     (set! life (+ life 1))
+  )
   
-  (cond [(and (= w 0) (equal? musicPlayer #f))
-           (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/epic.mp3")) #t)
-           (set! musicPlayer #t)]
-        [(= w 0) (render w intro   emptyState)]
-  )
-
-  (cond [(= w 2) (onOffMusicPlayer) (render w menu emptyState)])
-
-  (cond [(and (= w 7) (equal? musicPlayer #f))
-           (play-sound (string->path (string-append (path->string (current-directory)) "assets/mp3/panda.mp3")) #t)
-           (set! musicPlayer #t)]
-        [(= w 7) (render w actions listenState)]
-  )
-           
-  (cond [(= w 1) (render w title   emptyState)]
-        [(= w 3) (render w rename  emptyState)]
-        [(= w 4) (render w birth   eggState)]
-        [(= w 5) (render w actions idleState)]
-        [(= w 6) (render w actions eatState)]
-        [else    (render w actions idleState)]
+  ;;;Logic;;;
+  (cond [(= w (gui-state    intro))       (titleScene)]  ;0
+        [(= w (gui-state    title))       (titleScene)]  ;1
+        [(= w (gui-state    menu))        (menuScene)]   ;2
+        [(= w (gui-state    rename))      (renameScene)] ;3
+        [(= w (gui-state    birth))       (eggScene)]    ;4
+        [(= w (sprite-state idleState))   (idleScene)]   ;5
+        [(= w (sprite-state eatState))    (eatScene)]    ;6
+        [(= w (sprite-state listenState)) (listenScene)] ;7
+        [(= w (sprite-state healState))   (healScene)]   ;8
+        [(= w (sprite-state washState))   (washScene)]   ;9
+        [(= w (sprite-state gameState))   (gameScene)]   ;10
+        [(= w (sprite-state deadState))   (deadScene)]   ;11
+        [(= w (gui-state    sleep))       (sleepScene)]  ;12
   )
 )
 
+
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (isInside? x y button)
-              
-  (cond [(and (and
-             (>= x (- (pinhole-x (center-pinhole (button-img button))) (/ (button-width button) 2)))
-             (<= x (+ (- (pinhole-x (center-pinhole (button-img button))) (/ (button-width button) 2)) (button-width button)))
-         )   (and
-             (>= y (- (pinhole-y (center-pinhole (button-img button))) (/ (button-height button) 2)))
-             (<= y (+ (- (pinhole-y (center-pinhole (button-img button))) (/ (button-height button) 2)) (button-height button)))
-             )
-         )
-         #t]
-        [else #f]
-   )
-)
-
 (define (click me)
   
    (cond [(equal? me "button-down") #t]
-         [else #t])
+         [else #t]
+   )
 )
 
 (define (mouse w x y me)
@@ -587,10 +725,8 @@
   (cond [(equal? debug #t)
          (writeln (string-append  "ME:" me))
          (writeln (string-append  "X:" (number->string x) " Y:" (number->string y)))
-        ])
-
-  ;(cond [(and (and (isGUI? w menu) (isInside? x y newGameButton)) (click me)) (goTo w rename)])
- 
+        ]
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -600,7 +736,6 @@
 (define (keyboard w key)
 
   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
-
 
   (cond [(isGUI? w rename)
          (cond [(and  (key=? key "\b")) (not (equal? (pet-name panda) ""))
@@ -615,16 +750,18 @@
         [else w]
   )])
 
-  (cond [(key=? key "left" ) (- w 1)]
-        [(key=? key "right") (+ w 1)]
-        [(key=? key "c") 6]
-        [(key=? key "m") (onOffMusicPlayer) 7]
-        [(key=? key "p") (onOffPixelate) w]
+  (cond [(key=? key "left" ) (restart) (- w 1)]
+        [(key=? key "right") (restart) (+ w 1)]
+        
+        [(and (not (isGUI? w rename))(key=? key "c")) (restart) (sprite-state eatState)]
+        [(and (not (isGUI? w rename))(key=? key "h")) (restart) (sprite-state healState)]
+        [(and (not (isGUI? w rename))(key=? key "m")) (restart) (onOffMusicPlayer) (sprite-state listenState)]
+        [(and (not (isGUI? w rename))(key=? key "p")) (onOffPixelate) w]
 
-        [(key=? key "f5"   ) 0]
-        [(key=? key "f8"   ) (onOffDebug) w]
+        [(key=? key "f5") 0]
+        [(key=? key "f8") (onOffDebug) w]
 
-        [(key=? key "\r"   ) (+ w 1)]
+        [(key=? key "\r") (+ w 1)]
         [else w]
   )    
 )
@@ -643,12 +780,17 @@
      w
    )
 
-   (cond [(= (gui-frames actualGUI) countGUI) 
-          (cond [(equal? (gui-time actualGUI) "next" ) (setZeroCountGUI) (next w)]
-                [(equal? (gui-time actualGUI) "pause") (setZeroCountGUI) (pause w)]
-          )
-         ]
-         [else w]
+   
+
+   (define (goto sprite)
+     (sprite-state sprite)
+   )
+
+   (cond [(= (gui-frames actualGUI) countGUI)
+          (cond [(equal? (gui-time actualGUI) "idle")  (restart) (goto idleState)]
+                [(equal? (gui-time actualGUI) "next")  (restart) (next w)]
+                [(equal? (gui-time actualGUI) "pause") (pause w)])
+         ] [else w]
    )
 )
 
