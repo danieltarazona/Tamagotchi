@@ -436,7 +436,7 @@
 (define title    (gui "Title"    (screenCenterX) (screenCenterY)    1   680 "next"   titleUI))
 (define menu     (gui "Menu"     (screenCenterX) (screenCenterY)    2   120 "pause"  menuUI))
 (define rename   (gui "Rename"   (screenCenterX) (screenCenterY)    3   120 "pause"  renameUI))
-(define birth    (gui "Birth"    (screenCenterX) (screenCenterY)    4   120 "next"  birthUI))
+(define birth    (gui "Birth"    (screenCenterX) (screenCenterY)    4   120 "next"   birthUI))
 (define sleep    (gui "Sleep"    (screenCenterX) (screenCenterY)    12  600 "pause"  sleepUI))
 (define bars     (gui "Bars"     (screenCenterX) (screenOffsetY 1)  5   420 "idle"   barsUI))
 (define actions  (gui "Actions"  (screenCenterX) (screenCenterY)    5   420 "pause"  actionsUI))
@@ -954,7 +954,6 @@
 
     (cond [(and (equal? eating #f) (equal? musicPlayer #f)) 
            (listenStats)
-           (set-gui-frames! bars 900)
            (set! eating #t)
            (onMusicPlayer)
            ;(play-sound listenSong #t)
