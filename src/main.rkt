@@ -331,10 +331,10 @@
        (overlay/xy
         (text
          (string-append "Eat "
-                        (number->string (vector-ref (pet-stats panda) 0)) "/5")
+                        (number->string (vector-ref (pet-stats panda) 0)) "/10")
          12 "black") -25 0
                      (overlay/xy
-                      (rectangle (* 20  (vector-ref  (pet-stats panda) 0))  20 "solid" "red")
+                      (rectangle (* 10  (vector-ref  (pet-stats panda) 0))  20 "solid" "red")
                       0 0
                       (rectangle 100  20 "outline" "black"))
                      )
@@ -342,10 +342,10 @@
        (overlay/xy
         (text
          (string-append "Clean "
-                        (number->string (vector-ref (pet-stats panda) 1)) "/5")
+                        (number->string (vector-ref (pet-stats panda) 1)) "/10")
          12 "black") -25 0
                      (overlay/xy
-                      (rectangle (* 20 (vector-ref (pet-stats panda) 1))  20 "solid" "red")
+                      (rectangle (* 10 (vector-ref (pet-stats panda) 1))  20 "solid" "red")
                       0 0
                       (rectangle 100  20 "outline" "black"))
                      )
@@ -354,10 +354,10 @@
       (overlay/xy
        (text
         (string-append "Game "
-                       (number->string (vector-ref (pet-stats panda) 2)) "/5")
+                       (number->string (vector-ref (pet-stats panda) 2)) "/10")
         12 "black") -25 0
                     (overlay/xy
-                     (rectangle (* 20 (vector-ref (pet-stats panda) 2))  20 "solid" "red")
+                     (rectangle (* 10 (vector-ref (pet-stats panda) 2))  20 "solid" "red")
                      0 0
                      (rectangle 100  20 "outline" "black"))
                     )
@@ -366,10 +366,10 @@
      (overlay/xy
       (text
        (string-append "Heal "
-                      (number->string (vector-ref (pet-stats panda) 3)) "/5")
+                      (number->string (vector-ref (pet-stats panda) 3)) "/10")
        12 "black") -25 0
                    (overlay/xy
-                    (rectangle (* 20 (vector-ref (pet-stats panda) 3))  20 "solid" "red")
+                    (rectangle (* 10 (vector-ref (pet-stats panda) 3))  20 "solid" "red")
                     0 0
                     (rectangle 100  20 "outline" "black"))
                    )
@@ -379,9 +379,9 @@
     (overlay/xy
      (text
       (string-append "Listen "
-         (number->string (vector-ref (pet-stats panda) 4)) "/5") 12 "black") -25 0
+         (number->string (vector-ref (pet-stats panda) 4)) "/10") 12 "black") -25 0
             (overlay/xy
-               (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red")
+               (rectangle (* 10 (vector-ref (pet-stats panda) 4))  20 "solid" "red")
                    0 0
                 (rectangle 100  20 "outline" "black"))
     )
@@ -668,16 +668,19 @@
 )
 
 (define (addStat pos x)
-  (cond [(and (>= pos 0) (< pos 5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 3))
+  (cond [(and (>= pos 0) (< pos 5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 9))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
-        
-        [(and (>= pos 0) (< pos 5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 4))
+
+        [(and (>= pos 0) (< pos 5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 8))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
         [(and (= pos  5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 9))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
         [(and (= pos  5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 8))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
+
+        [(and (= pos  5) (= x 3) (<= (vector-ref (pet-stats panda) pos) 7))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
         [(and (= pos  5) (= (vector-ref (pet-stats panda) pos) 10))
@@ -719,22 +722,37 @@
   )
   
   (define (eatStats)
-    (addStat 0 1) ;Eat +1
-    (addStat 5 1) ;Happy +1
-    (subStat 1 1) ;Wash  -1
-    (subStat 3 1) ;Heal  -1
     (cond [(<= totalEat 3)
            (set! totalEat (+ totalEat 1))
            (set! totalWash   0)
            (set! totalGame   0)
            (set! totalListen 0)
            (set! totalHeal   0)
-           ]
+          ]
+    )
+    (cond [(= totalEat 1)
+           (addStat 0 1) ;Eat   +1
+           (addStat 5 1) ;Happy +1
+           (subStat 1 1) ;Wash  -1
+           (subStat 3 1) ;Heal  -1
+          ]
+          [(= totalEat 2)
+           (addStat 0 1) ;Eat   +1
+           (subStat 1 1) ;Wash  -1
+           (subStat 3 1) ;Heal  -1
+          ]
+          [(= totalEat 3)
+           (addStat 0 1) ;Eat   +1
+           (subStat 5 1) ;Happy -1
+           (subStat 1 1) ;Wash  -1
+           (subStat 3 1) ;Heal  -1
+          ]
      )
   )
   
   (define (washStats)
-     (addStat 1 2) ;Wash  +2
+     (cond [(= totalEat 3)(addStat 5 1)])
+     
      (cond [(<= totalWash 3)
             (set! totalWash (+ totalWash 1))
             (set! totalEat    0)
@@ -742,47 +760,98 @@
             (set! totalListen 0)
             (set! totalHeal   0)]
      )
+    
+     (cond [(= totalWash 1)
+            (addStat 1 2) ;Wash  +2
+            (addStat 5 2) ;Happy +2
+           ]
+           [(= totalWash 2)
+            (addStat 1 2) ;Wash  +2
+           ]
+           [(= totalWash 3)
+            (addStat 1 2) ;Wash  +2
+            (subStat 5 1) ;Happy -1
+           ]
+     )
   )
 
   (define (gameStats)
+    (cond [(= totalEat 3)(subStat 5 2)])
     
-    (addStat 2 1) ;Game  +1
-    (addStat 3 1) ;Heal  +1
-    (addStat 5 1) ;Happy +1
-    (subStat 1 1) ;Wash  -1
     (cond [(<= totalGame 3)
            (set! totalGame (+ totalGame 1))
            (set! totalEat    0)
            (set! totalWash   0)
            (set! totalListen 0)
-           (set! totalHeal   0)
-           ]
+           (set! totalHeal   0)]
+    )
+    
+    (cond [(= totalGame 1)
+           (addStat 2 1) ;Game  +1
+           (addStat 3 1) ;Heal  +1
+           (addStat 5 2) ;Happy +2
+           (subStat 1 1) ;Wash  -1
+          ]
+          [(= totalGame 2)
+           (addStat 2 1) ;Game  +1
+           (addStat 3 1) ;Heal  +1
+           (addStat 5 1) ;Happy +1
+           (subStat 1 1) ;Wash  -1
+          ]
+          [(= totalGame 3)
+           (addStat 2 1) ;Game  +1
+           (addStat 3 1) ;Heal  +1
+           (subStat 1 1) ;Wash  -1
+           (subStat 0 2) ;Eat   -2
+          ]
           )
     )
      
   (define (healStats)
-    (addStat 3 1) ;Heal  +1
-    (subStat 5 1) ;Happy -1
+    (cond [(= totalEat 3)(subStat 5 2)])
+    
     (cond [(<= totalHeal 3)
            (set! totalHeal (+ totalHeal 1))
            (set! totalEat    0)
            (set! totalWash   0)
            (set! totalListen 0)
            (set! totalGame   0)
-           ])
+           (addStat 3 1) ;Heal  +1
+           ]
     )
 
+    (cond [(= totalHeal 1)
+            (addStat 5 3) ;Happy +3
+          ]
+    )
+    
+    
+    
+  )
+
   (define (listenStats)
-     (addStat 4 1) ;Listen +1
-     (addStat 5 2) ;Happy  +2
-     (subStat 3 1) ;Heal   -1
+     (cond [(= totalEat 3)(subStat 5 2)])
      (cond [(<= totalListen 3)
             (set! totalListen (+ totalListen 1))
             (set! totalEat    0)
             (set! totalWash   0)
             (set! totalHeal   0)
             (set! totalGame   0)
-            
+           ]
+     )
+    
+     (cond [(= totalListen 1)
+            (addStat 4 1) ;Listen +1
+            (addStat 5 2) ;Happy  +2
+           ]
+           [(= totalListen 2)
+            (addStat 4 1) ;Listen +1
+            (addStat 5 1) ;Happy  +1
+           ]
+           [(= totalListen 2)
+            (addStat 4 1) ;Listen +1
+            (addStat 5 1) ;Happy  -1
+            (subStat 3 (vector-ref (pet-stats panda) 3)) ;Heal -All
            ]
      )
   )
@@ -823,7 +892,7 @@
      (vector-set! (pet-stats panda) 2 3)
      (vector-set! (pet-stats panda) 3 3)
      (vector-set! (pet-stats panda) 4 3)
-     (vector-set! (pet-stats panda) 5 6)
+     (vector-set! (pet-stats panda) 5 3)
      (render w birth eggState)
   )
 
