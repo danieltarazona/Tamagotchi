@@ -222,6 +222,12 @@
                                (underlay/xy (text "Next" 15 "black") 0 0
                                             (rectangle 100 50 "outline" "black")) 335 280 100 50))
 
+(define backButton (button "Back"
+                               (underlay/xy (text "Back to Menu" 15 "black") 0 0
+                                            (rectangle 100 50 "outline" "black")) 335 345 100 50))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -417,10 +423,8 @@
   (set! background (rectangle 768 432 "solid" "white"))
   (overlay/offset (barsUI w) 0 210
                   (overlay/offset (text "GAME OVER" 15 "black") 0 240
-                                  (underlay/xy (text "Back to Menu" 15 "black") 0 0
-                                               (rectangle 100 50 "outline" "black")
-                                               ) 
-                                  )
+                                  (button-img backButton)
+                  )
   )
 )
 
@@ -1064,6 +1068,9 @@
          (writeln "Inside SleepButton") (gui-state sleep)]
 
         [(and (isGUI? w actions) (equal? me "leave")) (gui-state sleep)]
+
+        [(and (isGUI? w gameover) (isInside? x y backButton) (click me))
+         (writeln "Inside BackButton") (gui-state menu)]
 
         [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
          (writeln "Inside WakeButton") (sprite-state idleState)]
