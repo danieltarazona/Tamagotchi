@@ -15,7 +15,6 @@
 (define totalFrames 30000)
 (define assets "assets/")
 (define background (rectangle 768 432 "solid" "white"))
-(define showGrid #f)
 (define gridX 12)
 (define gridY 9)
 (define centerPoint (circle 5 "solid" "blue"))
@@ -34,6 +33,7 @@
 (define debug #f)
 (define showFrames #t)
 (define showFPS #t)
+(define showGrid #f)
 (define showSpriteName #t)
 (define showGUIName #t)
 (define showTimeline #t)
@@ -400,20 +400,20 @@
    )
 )
 
-(define (backUI w)
-   (underlay/xy (text "Back to Menu" 15 "black") 0 0
-                (rectangle 100 50 "outline" "black")
-   ) 
-)
-
 (define (actionsUI w)
    (set! background (rectangle 768 432 "solid" "white"))
    (overlay/offset (barsUI w) 0 320 (buttonsUI w))
 )
 
 (define (gameoverUI w)
-   (set! background (rectangle 768 432 "solid" "white"))
-   (overlay/offset (barsUI w) 0 320 (backUI w))
+  (set! background (rectangle 768 432 "solid" "white"))
+  (overlay/offset (barsUI w) 0 210
+                  (overlay/offset (text "GAME OVER" 15 "black") 0 240
+                                  (underlay/xy (text "Back to Menu" 15 "black") 0 0
+                                               (rectangle 100 50 "outline" "black")
+                                               ) 
+                                  )
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -597,11 +597,11 @@
    (place-image
     (frame (drawGrid))               (screenCenterX)             (screenCenterY)    ; Grid Layer
    (place-image
-    (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 3)  ; Debug Layer
+    (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 4)  ; Debug Layer
    (place-image
     (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8)  ; Timeline
    (place-image
-    (frame (drawGUI w (gui-ui gui))) (gui-x gui)                 (gui-y gui)        ; GUI Layer
+    (drawGUI w (gui-ui gui))         (gui-x gui)                 (gui-y gui)        ; GUI Layer
    (place-image
     (frame (drawSprite w sprite))    (sprite-x sprite)           (sprite-y sprite)  ; Sprite Layer
                                      (drawBackground w background))))))]           ; Background
@@ -830,7 +830,7 @@
   ;;;IdleState and Lifetime;;;
   (define (idleScene)
      (cond [(= life 18000) (lifeStats) (setZeroLife)])
-     (cond [(isDead? panda)(render w gameover deadState)]
+     (cond [(isDead? panda)(deadScene)]
            [else (set! eating    #f)
                  (set! gaming    #f)
                  (set! washing   #f)
@@ -851,7 +851,7 @@
     (set-gui-frames! bars 240)
     (cond [(equal? eating #f) (eatStats) (set! eating #t)])
     
-    (cond [(= totalEat 4) (render w gameover deadState)]
+    (cond [(= totalEat 4) (deadScene)]
           [else (lifetime) (render w bars eatState)]
     )
   )
@@ -861,7 +861,7 @@
     (set-gui-frames! bars 420)
     (cond [(equal? washing #f) (washStats) (set! washing #t)])
     
-    (cond [(= totalWash 4) (render w gameover deadState)]
+    (cond [(= totalWash 4) (deadScene)]
           [else (lifetime) (render w bars washState)]
     )
   )
@@ -879,7 +879,7 @@
           ]
     )
     
-    (cond [(= totalListen 4) (render w gameover deadState)]
+    (cond [(= totalListen 4) (deadScene)]
           [else (lifetime)(render w bars listenState)]            
     ) 
   )
@@ -889,7 +889,7 @@
     (set-gui-frames! bars 420)
     (cond [(equal? gaming #f) (gameStats) (set! gaming #t)])
     
-    (cond [(= totalGame 4) (render w gameover deadState)]
+    (cond [(= totalGame 4) (deadScene)]
           [else (lifetime) (render w bars gameState)]
     )
   )
@@ -899,7 +899,7 @@
     (set-gui-frames! bars 240)
     (cond [(equal? healing #f) (healStats) (set! healing #t)])
     
-    (cond [(= totalHeal 4) (render w gameover deadState)]
+    (cond [(= totalHeal 4) (deadScene)]
           [else (lifetime) (render w bars healState)]
     )
   )
@@ -914,6 +914,7 @@
   ;;;DeadState;;;
   (define (deadScene)
     (set-gui-frames! gameover 120)
+    (setZeroStats panda)
     (stopGUI gameover)
     (stopSprite deadState)
     (render w gameover deadState)
@@ -965,17 +966,20 @@
   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
 
   (cond [(isGUI? w rename)
-         (cond [(and  (key=? key "\b")) (not (equal? (pet-name panda) ""))
-            (set-pet-name! panda
-                           (substring (pet-name panda) 0 (sub1 (string-length (pet-name panda)))))]
-        [(and (not (key=? key "shift"))
-              (not (key=? key "\b"))
-              (not (key=? key "left"))
-              (not (key=? key "right")))
-            (set-pet-name! panda
-                           (string-append (pet-name panda) key))]
-        [else w]
-  )])           
+            (cond [(and  (>= (string-length (pet-name panda)) 1) (key=? key "\b")) 
+                   (set-pet-name! panda
+                   (substring (pet-name panda) 0 (sub1 (string-length (pet-name panda)))))]
+                  [(and (not (key=? key "shift"))
+                        (not (key=? key "\b"))
+                        (not (key=? key "left"))
+                        (not (key=? key "right"))
+                        (not (key=? key "f8")))
+                   (set-pet-name! panda
+                               (string-append (pet-name panda) key))]
+                  [else w]
+            )
+        ]
+  )           
 
 
   (cond [(and (equal? debug #t) (not (isGUI? w intro)) (key=? key "left" )) (restart) (- w 1)]
