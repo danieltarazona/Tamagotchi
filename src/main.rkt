@@ -46,11 +46,23 @@
 
 (define-struct pet ([name #:mutable] stats))
 
-(define statFood   5)
-(define statWash   5)
-(define statGame   5)
-(define statHeal   5)
-(define statListen 5)
+(define eating    #f)
+(define washing   #f)
+(define gaming    #f)
+(define healing   #f)
+(define listening #f)
+
+(define totalFood   0)
+(define totalWash   0)
+(define totalGame   0)
+(define totalHeal   0)
+(define totalListen 0)
+
+(define statFood   3)
+(define statWash   3)
+(define statGame   3)
+(define statHeal   3)
+(define statListen 3)
 (define statHappy  5)
 
 (define stats (vector statFood statWash statGame statHeal statListen statHappy))
@@ -226,21 +238,26 @@
          (if musicPlayer
              (text "Music: On" 12 "black")
                 (text "Music: Off" 12 "black"))
-         (text (string-append "CountSprite: " (number->string count))     12 "black")
-         (text (string-append "CountGUI: "    (number->string countGUI))  12 "black")
-         (text (string-append "Lifetime: "    (number->string life))  12 "black")
+         (text (string-append "CountSprite: " (number->string count))       12 "black")
+         (text (string-append "CountGUI: "    (number->string countGUI))    12 "black")
+         (text (string-append "Lifetime: "    (number->string life))        12 "black")
+         (text (string-append "TotalFood: "   (number->string totalFood))   12 "black")
+         (text (string-append "TotalWash: "   (number->string totalWash))   12 "black")
+         (text (string-append "TotalGame: "   (number->string totalGame))   12 "black")
+         (text (string-append "TotalHeal: "   (number->string totalHeal))   12 "black")
+         (text (string-append "TotalListen: " (number->string totalListen)) 12 "black")
   )         
 )
 
 (define (introUI w)
   (above (text "Valentina" 40 "purple")
-         (text "Santiago" 40 "purple")
-         (text "Daniel" 40 "purple")
+         (text "Santiago"  40 "purple")
+         (text "Daniel"    40 "purple")
   )
 )
 
 (define (titleUI w)
-  (set! background (rectangle 768 432 "solid" "black"))
+  (set! background (rectangle 768 432 "solid" "white"))
   (cond [(equal? pixelate #t)
             (bitmap/file (string-append assets "/img/background/title-pixel.png"))]
            [else (bitmap/file (string-append assets "/img/background/title.png"))]
@@ -382,22 +399,34 @@
    )
 )
 
+(define (backUI w)
+   (underlay/xy (text "Back to Menu" 15 "black") 0 0
+                (rectangle 100 50 "outline" "black")
+   ) 
+)
+
 (define (actionsUI w)
    (overlay/offset (barsUI w) 0 320 (buttonsUI w))
+)
+
+(define (gameoverUI w)
+   (set! background (rectangle 768 432 "solid" "white"))
+   (overlay/offset (barsUI w) 0 320 (backUI w))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;; GUIs ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define intro   (gui "Intro"   (screenCenterX) (screenCenterY)    0  680 "next"   introUI))
-(define title   (gui "Title"   (screenCenterX) (screenCenterY)    1  360 "next"   titleUI))
-(define menu    (gui "Menu"    (screenCenterX) (screenCenterY)    2  120 "pause"  menuUI))
-(define rename  (gui "Rename"  (screenCenterX) (screenCenterY)    3  120 "pause"  renameUI))
-(define birth   (gui "Birth"   (screenCenterX) (screenCenterY)    4  120 "pause"  birthUI))
-(define sleep   (gui "Sleep"   (screenCenterX) (screenCenterY)    12 600 "pause"  sleepUI))
-(define bars    (gui "Bars"    (screenCenterX) (screenOffsetY 1)  0  420 "idle"    barsUI))
-(define actions (gui "Actions" (screenCenterX) (screenCenterY)    0  420 "pause"   actionsUI))
+(define intro    (gui "Intro"    (screenCenterX) (screenCenterY)    0   680 "next"   introUI))
+(define title    (gui "Title"    (screenCenterX) (screenCenterY)    1   360 "next"   titleUI))
+(define menu     (gui "Menu"     (screenCenterX) (screenCenterY)    2   120 "pause"  menuUI))
+(define rename   (gui "Rename"   (screenCenterX) (screenCenterY)    3   120 "pause"  renameUI))
+(define birth    (gui "Birth"    (screenCenterX) (screenCenterY)    4   120 "pause"  birthUI))
+(define sleep    (gui "Sleep"    (screenCenterX) (screenCenterY)    12  600 "pause"  sleepUI))
+(define bars     (gui "Bars"     (screenCenterX) (screenOffsetY 1)  5   420 "idle"   barsUI))
+(define actions  (gui "Actions"  (screenCenterX) (screenCenterY)    5   420 "pause"  actionsUI))
+(define gameover (gui "GameOver" (screenCenterX) (screenCenterY)    11  120 "pause"  gameoverUI))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;; States ;;;;;;;;;;;;;;;;;;
@@ -469,11 +498,9 @@
   (cond [(gui? x) (gui-state x)])
 )
 
-(define (isSprite? [x "Main"])
-  (cond [(symbol? x)(equal? actualSprite x) #t]
-        [(and (sprite? x)(equal? actualSprite (sprite-name x))) #t]
-        [else #f]
-  )
+(define (isSprite? w sprite)
+  (cond [(= w (sprite-state sprite)) #t]
+        [else #f])
 )
 
 (define (isGUI? w gui)
@@ -555,7 +582,7 @@
    (place-image
     (frame (drawGrid))               (screenCenterX)             (screenCenterY)    ; Grid Layer
    (place-image
-    (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 1)  ; Debug Layer
+    (frame (debugUI w))              (screenRightX (debugUI w))  (screenOffsetY 2)  ; Debug Layer
    (place-image
     (frame (drawTimeline w))         (screenCenterX)             (screenOffsetY 8)  ; Timeline
    (place-image
@@ -596,7 +623,91 @@
    )
 )
 
+;(define statFood   3)
+;(define statWash   3)
+;(define statGame   3)
+;(define statHeal   3)
+;(define statListen 3)
+;(define statHappy  5)
+
+(define (addStat pos add)
+  (cond [(and (= pos 0) (<= (vector-ref (pet-stats panda) statFood) (- 5 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statFood)  add))
+        ]
+        [(and (= pos 1) (<= (vector-ref (pet-stats panda) statWash) (- 5 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statWash) add))
+        ]
+        [(and (= pos 2) (<= (vector-ref (pet-stats panda) statGame) (- 5 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statGame) add))
+        ]
+        [(and (= pos 3) (<= (vector-ref (pet-stats panda) statHeal) (- 5 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statHeal) add))
+        ]
+        [(and (= pos 4) (<= (vector-ref (pet-stats panda) statListen) (- 5 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statListen) add))
+        ]
+        [(and (= pos 5) (<= (vector-ref (pet-stats panda) statHappy) (- 10 add)))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) statHappy) add))
+        ]
+  )
+)
+
+(define (subStat pos sub)
+  (cond [(and (= pos 0) (>= (vector-ref (pet-stats panda) statFood) (+ 0 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statFood)  sub))
+        ]
+        [(and (= pos 1) (>= (vector-ref (pet-stats panda) statWash) (+ 0 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statWash) sub))
+        ]
+        [(and (= pos 2) (>= (vector-ref (pet-stats panda) statGame) (+ 0 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statGame) sub))
+        ]
+        [(and (= pos 3) (>= (vector-ref (pet-stats panda) statHeal) (+ 0 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statHeal) sub))
+        ]
+        [(and (= pos 4) (>= (vector-ref (pet-stats panda) statListen) (+ 0 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statListen) sub))
+        ]
+        [(and (= pos 5) (>= (vector-ref (pet-stats panda) statHappy) (+ 3 sub)))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) statHappy) sub))
+        ]
+  )
+)
+
 (define (gameplay w)
+
+  (define (eatStats)
+     (set! totalFood (+ totalFood 1))
+     (addStat 0 1) ;Food  +1
+     (addStat 5 1) ;Happy +1
+     (subStat 3 1) ;Heal  -1
+     (subStat 1 1) ;Wash  -1
+  )
+
+  (define (washStats)
+     (set! totalWash (+ totalWash 1))
+     (addStat 1 2) ;Wash  +2
+  )
+
+  (define (gameStats)
+     (set! totalGame (+ totalGame 1))
+     (subStat 0 1) ;Food  -1
+     (addStat 5 1) ;Happy +1
+     (addStat 3 1) ;Heal  +1
+     (addStat 1 1) ;Wash  -1
+  )
+
+  (define (healStats)
+     (set! totalHeal (+ totalHeal 1))
+     (addStat 3 1) ;Heal  +1
+     (subStat 5 1) ;Happy -1
+  )
+
+  (define (listenStats)
+     (set! totalListen (+ totalListen 1))
+     (subStat 3 1) ;Heal  -1
+     (addStat 5 2) ;Happy +1
+  )
 
   ;;;Intro and Music;;;
   (define (introScene)
@@ -634,6 +745,12 @@
 
   ;;;IdleState and Lifetime;;;
   (define (idleScene)
+     (set! eating #f)
+     (set! gaming #f)
+     (set! washing #f)
+     (set! healing #f)
+     (set! listening #f)
+     (set-gui-frames! bars 840)
      (offMusicPlayer)
      (lifetime)
      (render w actions idleState) 
@@ -641,7 +758,10 @@
 
   ;;;ListenState;;;
   (define (listenScene)
-    (cond [(equal? musicPlayer #f)
+    (cond [(and (equal? eating #f) (equal? musicPlayer #f)) 
+           (eatStats)
+           (set-gui-frames! bars 900)
+           (set! eating #t)
            (onMusicPlayer)
            (play-sound listenSong #t)
           ]
@@ -652,24 +772,28 @@
 
   ;;;EatState;;;
   (define (eatScene)
+    (cond [(equal? eating #f) (eatStats) (set! eating #t)])
     (lifetime)
     (render w bars eatState)
   )
 
   ;;;WashState;;;
   (define (washScene)
+    (cond [(equal? washing #f) (washStats) (set! washing #t)])
     (lifetime)
     (render w bars washState)
   )
 
   ;;;GameState;;;
   (define (gameScene)
+    (cond [(equal? gaming #f) (gameStats) (set! gaming #t)])
     (lifetime)
     (render w bars gameState)
   )
 
   ;;;HealState;;;
   (define (healScene)
+    (cond [(equal? healing #f) (healStats) (set! healing #t)])
     (lifetime)
     (render w bars healState)
   )
@@ -682,7 +806,7 @@
 
   ;;;HealState;;;
   (define (deadScene)
-    (render w birth deadState)
+    (render w gameover deadState)
   )
 
   ;;;Stats;;;
@@ -691,7 +815,7 @@
   )
   
   ;;;Logic;;;
-  (cond [(= w (gui-state    intro))       (titleScene)]  ;0
+  (cond [(= w (gui-state    intro))       (introScene)]  ;0
         [(= w (gui-state    title))       (titleScene)]  ;1
         [(= w (gui-state    menu))        (menuScene)]   ;2
         [(= w (gui-state    rename))      (renameScene)] ;3
@@ -706,8 +830,6 @@
         [(= w (gui-state    sleep))       (sleepScene)]  ;12
   )
 )
-
-
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
@@ -748,20 +870,32 @@
             (set-pet-name! panda
                            (string-append (pet-name panda) key))]
         [else w]
-  )])
+  )])           
 
-  (cond [(key=? key "left" ) (restart) (- w 1)]
-        [(key=? key "right") (restart) (+ w 1)]
+
+  (cond [(and (equal? debug #t) (not (isGUI? w intro)) (key=? key "left" )) (restart) (- w 1)]
+        [(and (equal? debug #t) (not (isGUI? w sleep)) (key=? key "right")) (restart) (+ w 1)]
+
+        [(and (isGUI? w actions) (not (isGUI? w rename)) (key=? key "z"))
+            (restart) (sprite-state washState)]
         
-        [(and (not (isGUI? w rename))(key=? key "c")) (restart) (sprite-state eatState)]
-        [(and (not (isGUI? w rename))(key=? key "h")) (restart) (sprite-state healState)]
-        [(and (not (isGUI? w rename))(key=? key "m")) (restart) (onOffMusicPlayer) (sprite-state listenState)]
-        [(and (not (isGUI? w rename))(key=? key "p")) (onOffPixelate) w]
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "x"))
+            (restart) (sprite-state gameState)]
+
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "c"))
+            (restart) (sprite-state eatState)]
+
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "v"))
+            (restart) (sprite-state healState)]
+
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "b"))
+            (restart) (sprite-state listenState)]
 
         [(key=? key "f5") 0]
         [(key=? key "f8") (onOffDebug) w]
+        [(and (not (isGUI? w rename)) (key=? key "p")) (onOffPixelate) w]
 
-        [(key=? key "\r") (+ w 1)]
+        [(and (isGUI? w rename) (key=? key "\r")) (+ w 1)]
         [else w]
   )    
 )
