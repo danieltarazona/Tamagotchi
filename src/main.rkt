@@ -1030,7 +1030,7 @@
 )
 
 (define (click me)
-  (cond [(and (mouse-event? me)(equal? me "button-down")) (write "and Click") #t]
+  (cond [(and (mouse-event? me)(equal? me "button-down")) "Click " #t]
         [else #f])
 )
 
@@ -1040,10 +1040,6 @@
          (writeln (string-append  "ME:" me))
          (writeln (string-append  "X:" (number->string x) " Y:" (number->string y)))
         ] [else w]
-  )
-
-  (cond [(mouse=? me "enter") w]
-        [(mouse=? me "leave") w]
   )
   
   (cond [(and (isGUI? w menu) (isInside? x y newGameButton)  (click me))
@@ -1066,6 +1062,8 @@
          (writeln "Inside ListenButton") (sprite-state listenState)]
         [(and (isGUI? w actions) (isInside? x y sleepButton) (click me))
          (writeln "Inside SleepButton") (gui-state sleep)]
+
+        [(and (isGUI? w actions) (equal? me "leave")) (gui-state sleep)]
 
         [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
          (writeln "Inside WakeButton") (sprite-state idleState)]
