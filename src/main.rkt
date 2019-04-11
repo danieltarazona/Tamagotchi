@@ -52,6 +52,7 @@
 (define gaming    #f)
 (define healing   #f)
 (define listening #f)
+(define sleeping  #f)
 
 (define totalEat    0)
 (define totalWash   0)
@@ -294,11 +295,7 @@
 
 (define (sleepUI w)
   (set! background (rectangle 768 432 "solid" "black"))
-  (overlay/offset
-      (button-img sleepButton)
-      0 -200
-      (rectangle 768 432 "solid" "black")
-  )
+  (scale 2 (button-img sleepButton))
 )
 
 (define (renameUI w)
@@ -411,6 +408,7 @@
 )
 
 (define (actionsUI w)
+   (set! background (rectangle 768 432 "solid" "white"))
    (overlay/offset (barsUI w) 0 320 (buttonsUI w))
 )
 
@@ -629,21 +627,38 @@
 )
 
 (define (addStat pos x)
-
   (cond [(and (>= pos 0) (< pos 5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 3))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
         [(and (>= pos 0) (< pos 5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 4))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
-        [(and (= pos  5) (= x 1) (<= (vector-ref (pet-stats panda) 5) 9))
-         (vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) 5) x))]
+        [(and (= pos  5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 9))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
-        [(and (= pos  5) (= x 2) (<= (vector-ref (pet-stats panda) 5) 8))
-         (vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) 5) x))]
+        [(and (= pos  5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 8))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
         
-        [(and (= pos  5) (= (vector-ref (pet-stats panda) 5) 10))
-         (vector-set! (pet-stats panda) 5 10)]
+        [(and (= pos  5) (= (vector-ref (pet-stats panda) pos) 10))
+         (vector-set! (pet-stats panda) pos 10)]
+        )
+)
+
+(define (subStat pos x)
+  (cond [(and (>= pos 0) (< pos 5) (= x 2) (>= (vector-ref (pet-stats panda) pos) 1))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
+        
+        [(and (>= pos 0) (< pos 5) (= x 1) (>= (vector-ref (pet-stats panda) pos) 1))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
+        
+        [(and (= pos  5) (= x 1) (>= (vector-ref (pet-stats panda) pos) 4))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 5) x))]
+        
+        [(and (= pos  5) (= x 2) (>= (vector-ref (pet-stats panda) pos) 5))
+         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
+        
+        [(and (= pos  5) (= (vector-ref (pet-stats panda) pos) 3))
+         (vector-set! (pet-stats panda) pos 3)]
         )
 )
 
@@ -656,8 +671,8 @@
   (define (eatStats)
     (addStat 0 1) ;Eat +1
     (addStat 5 1) ;Happy +1
-    ;(subStat 1 1) ;Wash  -1
-    ;(subStat 3 1) ;Heal  -1
+    (subStat 1 1) ;Wash  -1
+    (subStat 3 1) ;Heal  -1
     (cond [(<= totalEat 3)
            (set! totalEat (+ totalEat 1))
            (set! totalWash   0)
@@ -665,8 +680,8 @@
            (set! totalListen 0)
            (set! totalHeal   0)
            ]
-          )
-    )
+     )
+  )
   
   (define (washStats)
      (addStat 1 2) ;Wash  +2
@@ -684,7 +699,7 @@
     (addStat 2 1) ;Game  +1
     (addStat 3 1) ;Heal  +1
     (addStat 5 1) ;Happy +1
-    ;(subStat 1 1) ;Wash  -1
+    (subStat 1 1) ;Wash  -1
     (cond [(<= totalGame 3)
            (set! totalGame (+ totalGame 1))
            (set! totalEat    0)
@@ -697,7 +712,7 @@
      
   (define (healStats)
     (addStat 3 1) ;Heal  +1
-    ;(subStat 5 1) ;Happy -1
+    (subStat 5 1) ;Happy -1
     (cond [(<= totalHeal 3)
            (set! totalHeal (+ totalHeal 1))
            (set! totalEat    0)
@@ -710,7 +725,7 @@
   (define (listenStats)
      (addStat 4 1) ;Listen +1
      (addStat 5 2) ;Happy  +2
-     ;(subStat 3 1) ;Heal   -1
+     (subStat 3 1) ;Heal   -1
      (cond [(<= totalListen 3)
             (set! totalListen (+ totalListen 1))
             (set! totalEat    0)
@@ -720,7 +735,6 @@
             
            ]
      )
-
   )
 
   ;;;Intro and Music;;;
@@ -765,11 +779,12 @@
 
   ;;;IdleState and Lifetime;;;
   (define (idleScene)
-     (set! eating #f)
-     (set! gaming #f)
-     (set! washing #f)
-     (set! healing #f)
+     (set! eating    #f)
+     (set! gaming    #f)
+     (set! washing   #f)
+     (set! healing   #f)
      (set! listening #f)
+     (set! sleeping  #f)
      (set-gui-frames! bars 120)
      (set-gui-frames! actions 120)
      (offMusicPlayer)
@@ -837,6 +852,7 @@
 
   ;;;SleepState;;;
   (define (sleepScene)
+    (cond [(equal? sleeping #f) (set! sleeping #t)])
     (lifetime)
     (render w sleep emptyState)
   )
@@ -932,7 +948,10 @@
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "n"))
             (restart) (gui-state sleep)]
 
-        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "m"))
+        [(and (isGUI? w sleep) (not (isGUI? w rename))  (key=? key "n"))
+            (restart) (sprite-state idleState)]
+
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "escape"))
             (restart) (sprite-state idleState)]
 
         [(key=? key "f5") 0]
@@ -957,8 +976,6 @@
    (define (pause w)
      w
    )
-
-   
 
    (define (goto sprite)
      (sprite-state sprite)
