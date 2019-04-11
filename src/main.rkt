@@ -5,7 +5,6 @@
 (require 2htdp/image
          (only-in racket/gui/base play-sound))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Global Variables ;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,12 +59,12 @@
 (define totalHeal   0)
 (define totalListen 0)
 
-(define statEat    0)
-(define statWash   0)
-(define statGame   0)
-(define statHeal   0)
-(define statListen 0)
-(define statHappy  0)
+(define statEat     0)
+(define statWash    0)
+(define statGame    0)
+(define statHeal    0)
+(define statListen  0)
+(define statHappy   0)
 
 (define stats (vector statEat statWash statGame statHeal statListen statHappy))
 
@@ -482,11 +481,15 @@
 )
 
 (define (addOneCount)
-  (set! count (+ 1 count))
+  (set! count (+ count 1))
 )
 
 (define (addOneCountGUI)
-  (set! countGUI (+ 1 countGUI))
+  (set! countGUI (+ countGUI 1))
+)
+
+(define (lifetime)
+  (set! life (+ life 1))
 )
 
 (define (setZeroCount)
@@ -495,6 +498,15 @@
 
 (define (setZeroCountGUI)
   (set! countGUI 0)
+)
+
+(define (setZeroLife)
+  (set! life 0)
+)
+
+(define (restart)
+   (setZeroCount)
+   (setZeroCountGUI)
 )
 
 (define (goTo x)
@@ -607,11 +619,6 @@
 ;;;;;;;;;; Gameplay Helper ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (restart)
-   (setZeroCount)
-   (setZeroCountGUI)
-)
-
 (define (onMusicPlayer)
    (cond [(equal? musicPlayer #f) (set! musicPlayer #t)])
 )
@@ -623,6 +630,40 @@
 (define (onOffMusicPlayer)
    (cond [(equal? musicPlayer #f) (set! musicPlayer #t)]
          [else (set! musicPlayer #f)]
+   )
+)
+
+(define (stopSprite sprite)
+   (cond [(>= countGUI (sprite-frames sprite))
+          (set! count (- (sprite-frames sprite) 1))
+         ]
+   )
+)
+
+(define (stopGUI gui)
+   (cond [(>= countGUI (gui-frames gui))
+          (set! countGUI (gui-frames gui))
+         ]
+   )
+)
+
+(define (setZeroStats pet)
+  (vector-set! (pet-stats pet) 0 0)
+  (vector-set! (pet-stats pet) 1 0)
+  (vector-set! (pet-stats pet) 2 0)
+  (vector-set! (pet-stats pet) 3 0)
+  (vector-set! (pet-stats pet) 4 0)
+  (vector-set! (pet-stats pet) 5 0)
+)
+
+(define (isDead? pet)
+   (cond [(and (= (vector-ref (pet-stats pet) 0) 0)
+               (= (vector-ref (pet-stats pet) 1) 0)
+               (= (vector-ref (pet-stats pet) 2) 0)
+               (= (vector-ref (pet-stats pet) 3) 0)
+               (= (vector-ref (pet-stats pet) 4) 0)
+               (= (vector-ref (pet-stats pet) 5) 0)) #t]
+         [else #f]
    )
 )
 
@@ -667,6 +708,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
+
+  (define (lifeStats)
+     (subStat 0 1)
+     (subStat 1 1)
+     (subStat 2 1)
+     (subStat 3 1)
+     (subStat 4 1)
+     (subStat 5 1)
+  )
   
   (define (eatStats)
     (addStat 0 1) ;Eat +1
@@ -779,17 +829,21 @@
 
   ;;;IdleState and Lifetime;;;
   (define (idleScene)
-     (set! eating    #f)
-     (set! gaming    #f)
-     (set! washing   #f)
-     (set! healing   #f)
-     (set! listening #f)
-     (set! sleeping  #f)
-     (set-gui-frames! bars 120)
-     (set-gui-frames! actions 120)
-     (offMusicPlayer)
-     (lifetime)
-     (render w actions idleState)
+     (cond [(= life 18000) (lifeStats) (setZeroLife)])
+     (cond [(isDead? panda)(render w gameover deadState)]
+           [else (set! eating    #f)
+                 (set! gaming    #f)
+                 (set! washing   #f)
+                 (set! healing   #f)
+                 (set! listening #f)
+                 (set! sleeping  #f)
+                 (set-gui-frames! bars 120)
+                 (set-gui-frames! actions 120)
+                 (offMusicPlayer)
+                 (lifetime)
+                 (render w actions idleState)
+           ]
+     )
   )
 
   ;;;EatState;;;
@@ -860,12 +914,9 @@
   ;;;DeadState;;;
   (define (deadScene)
     (set-gui-frames! gameover 120)
+    (stopGUI gameover)
+    (stopSprite deadState)
     (render w gameover deadState)
-  )
-
-  ;;;Stats;;;
-  (define (lifetime)
-     (set! life (+ life 1))
   )
   
   ;;;Logic;;;
@@ -951,6 +1002,9 @@
         [(and (isGUI? w sleep) (not (isGUI? w rename))  (key=? key "n"))
             (restart) (sprite-state idleState)]
 
+        [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "k"))
+            (restart) (setZeroStats panda) (sprite-state idleState)]
+
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "escape"))
             (restart) (sprite-state idleState)]
 
@@ -985,7 +1039,7 @@
           (cond [(equal? (gui-time actualGUI) "idle")  (restart) (goto idleState)]
                 [(equal? (gui-time actualGUI) "next")  (restart) (next w)]
                 [(equal? (gui-time actualGUI) "pause") (pause w)])
-         ] [else w]
+         ][else w]
    )
 )
 
