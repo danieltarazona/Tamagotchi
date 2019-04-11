@@ -59,14 +59,14 @@
 (define totalHeal   0)
 (define totalListen 0)
 
-(define statFood   3)
-(define statWash   3)
-(define statGame   3)
-(define statHeal   3)
-(define statListen 3)
-(define statHappy  5)
+(define statEat    0)
+(define statWash   0)
+(define statGame   0)
+(define statHeal   0)
+(define statListen 0)
+(define statHappy  0)
 
-(define stats (vector statFood statWash statGame statHeal statListen statHappy))
+(define stats (vector statEat statWash statGame statHeal statListen statHappy))
 
 (define panda (make-pet petname stats))
 
@@ -334,11 +334,11 @@
       (overlay/xy
        (overlay/xy
         (text
-         (string-append "Hungry "
+         (string-append "Eat "
                         (number->string (vector-ref (pet-stats panda) 0)) "/5")
          12 "black") -25 0
                      (overlay/xy
-                      (rectangle (* 20 (vector-ref (pet-stats panda) 0))  20 "solid" "red")
+                      (rectangle (* 20  (vector-ref  (pet-stats panda) 0))  20 "solid" "red")
                       0 0
                       (rectangle 100  20 "outline" "black"))
                      )
@@ -365,7 +365,7 @@
                      0 0
                      (rectangle 100  20 "outline" "black"))
                     )
-      )
+     )
      330 0
      (overlay/xy
       (text
@@ -377,18 +377,18 @@
                     0 0
                     (rectangle 100  20 "outline" "black"))
                    )
-     )
+      )
+     
     440 0
     (overlay/xy
      (text
       (string-append "Listen "
-                     (number->string (vector-ref (pet-stats panda) 4)) "/5")
-      12 "black") -25 0
-                  (overlay/xy
-                   (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red")
+         (number->string (vector-ref (pet-stats panda) 4)) "/5") 12 "black") -25 0
+            (overlay/xy
+               (rectangle (* 20 (vector-ref (pet-stats panda) 4))  20 "solid" "red")
                    0 0
-                   (rectangle 100  20 "outline" "black"))
-                  )
+                (rectangle 100  20 "outline" "black"))
+    )
     )
    550 0
    (overlay/xy
@@ -628,49 +628,23 @@
    )
 )
 
-(define (addStat pos add)
-  
-  (cond [(and (= pos 0) (<= (vector-ref (pet-stats panda) 0) (- 5 add)))
-         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 0) add))]
-        [(and (= pos 1) (<= (vector-ref (pet-stats panda) 1) (- 5 add)))
-         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 1) add))]
-        [(and (= pos 2) (<= (vector-ref (pet-stats panda) 2) (- 5 add)))
-         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 2) add))]
-        [(and (= pos 3) (<= (vector-ref (pet-stats panda) 3) (- 5 add)))
-         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 3) add))]
-        [(and (= pos 4) (<= (vector-ref (pet-stats panda) 4) (- 5 add)))
-         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 4) add))]
-        [else (vector-set! (pet-stats panda) pos 5)]
-  )
-  
-  (cond 
-    [(and (= pos 5) (<= (vector-ref (pet-stats panda) 5) (- 10 add)))
-     (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) 5) add))]
-    [else (vector-set! (pet-stats panda) 5 10)]
-  )
-)
+(define (addStat pos x)
 
-
-(define (subStat pos sub)
-  (cond [(and (= pos 0) (>= (vector-ref (pet-stats panda) 0) (+ 0 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 0) sub))
-        ]
-        [(and (= pos 1) (>= (vector-ref (pet-stats panda) 1) (+ 0 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 1) sub))
-        ]
-        [(and (= pos 2) (>= (vector-ref (pet-stats panda) 2) (+ 0 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 2) sub))
-        ]
-        [(and (= pos 3) (>= (vector-ref (pet-stats panda) 3) (+ 0 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 3) sub))
-        ]
-        [(and (= pos 4) (>= (vector-ref (pet-stats panda) 4) (+ 0 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 4) sub))
-        ]
-        [(and (= pos 5) (>= (vector-ref (pet-stats panda) 5) (+ 3 sub)))
-         (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 5) sub))
-        ]
-  )
+  (cond [(and (>= pos 0) (< pos 5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 3))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
+        
+        [(and (>= pos 0) (< pos 5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 4))
+         (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
+        
+        [(and (= pos  5) (= x 1) (<= (vector-ref (pet-stats panda) 5) 9))
+         (vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) 5) x))]
+        
+        [(and (= pos  5) (= x 2) (<= (vector-ref (pet-stats panda) 5) 8))
+         (vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) 5) x))]
+        
+        [(and (= pos  5) (= (vector-ref (pet-stats panda) 5) 10))
+         (vector-set! (pet-stats panda) 5 10)]
+        )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -678,74 +652,75 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (gameplay w)
-
+  
   (define (eatStats)
-     (cond [(<= totalEat 3)
-            (set! totalEat (+ totalEat 1))
-            (set! totalWash   0)
-            (set! totalGame   0)
-            (set! totalListen 0)
-            (set! totalHeal   0)
+    (addStat 0 1) ;Eat +1
+    (addStat 5 1) ;Happy +1
+    ;(subStat 1 1) ;Wash  -1
+    ;(subStat 3 1) ;Heal  -1
+    (cond [(<= totalEat 3)
+           (set! totalEat (+ totalEat 1))
+           (set! totalWash   0)
+           (set! totalGame   0)
+           (set! totalListen 0)
+           (set! totalHeal   0)
            ]
-     )
-     (addStat 0 1) ;Food  +1
-     (subStat 1 1) ;Wash  -1
-     (subStat 3 1) ;Heal  -1
-     (addStat 5 1) ;Happy +1
-  )
-
+          )
+    )
+  
   (define (washStats)
+     (addStat 1 2) ;Wash  +2
      (cond [(<= totalWash 3)
             (set! totalWash (+ totalWash 1))
             (set! totalEat    0)
             (set! totalGame   0)
             (set! totalListen 0)
-            (set! totalHeal   0)
-           ]
+            (set! totalHeal   0)]
      )
-     (addStat 1 2) ;Wash  +1
   )
 
   (define (gameStats)
-     (cond [(<= totalGame 3)
-            (set! totalGame (+ totalGame 1))
-            (set! totalEat    0)
-            (set! totalWash   0)
-            (set! totalListen 0)
-            (set! totalHeal   0)
+    
+    (addStat 2 1) ;Game  +1
+    (addStat 3 1) ;Heal  +1
+    (addStat 5 1) ;Happy +1
+    ;(subStat 1 1) ;Wash  -1
+    (cond [(<= totalGame 3)
+           (set! totalGame (+ totalGame 1))
+           (set! totalEat    0)
+           (set! totalWash   0)
+           (set! totalListen 0)
+           (set! totalHeal   0)
            ]
-     )
-     (subStat 0 1) ;Food  -1
-     (addStat 5 1) ;Happy +1
-     (addStat 3 1) ;Heal  +1
-     (addStat 1 1) ;Wash  -1
-  )
-
+          )
+    )
+     
   (define (healStats)
-     (set-gui-frames! actions 120)
-     (cond [(<= totalHeal 3)
-            (set! totalHeal (+ totalHeal 1))
-            (set! totalEat    0)
-            (set! totalWash   0)
-            (set! totalListen 0)
-            (set! totalGame   0)
-           ]
-     )
-     (addStat 3 1) ;Heal  +1
-     (subStat 5 1) ;Happy -1
-  )
+    (addStat 3 1) ;Heal  +1
+    ;(subStat 5 1) ;Happy -1
+    (cond [(<= totalHeal 3)
+           (set! totalHeal (+ totalHeal 1))
+           (set! totalEat    0)
+           (set! totalWash   0)
+           (set! totalListen 0)
+           (set! totalGame   0)
+           ])
+    )
 
   (define (listenStats)
+     (addStat 4 1) ;Listen +1
+     (addStat 5 2) ;Happy  +2
+     ;(subStat 3 1) ;Heal   -1
      (cond [(<= totalListen 3)
             (set! totalListen (+ totalListen 1))
             (set! totalEat    0)
             (set! totalWash   0)
             (set! totalHeal   0)
             (set! totalGame   0)
+            
            ]
      )
-     (subStat 3 1) ;Heal  -1
-     (addStat 5 1) ;Happy +1
+
   )
 
   ;;;Intro and Music;;;
@@ -779,6 +754,12 @@
 
   ;;;EggState;;;
   (define (eggScene)
+     (vector-set! (pet-stats panda) 0 3)
+     (vector-set! (pet-stats panda) 1 3)
+     (vector-set! (pet-stats panda) 2 3)
+     (vector-set! (pet-stats panda) 3 3)
+     (vector-set! (pet-stats panda) 4 3)
+     (vector-set! (pet-stats panda) 5 6)
      (render w birth eggState)
   )
 
@@ -821,7 +802,7 @@
     (set-gui-frames! bars 420)
 
     (cond [(and (equal? eating #f) (equal? musicPlayer #f)) 
-           (eatStats)
+           (listenStats)
            (set-gui-frames! bars 900)
            (set! eating #t)
            (onMusicPlayer)
@@ -846,7 +827,7 @@
 
   ;;;HealState;;;
   (define (healScene)
-    (set-gui-frames! bars 420)
+    (set-gui-frames! bars 240)
     (cond [(equal? healing #f) (healStats) (set! healing #t)])
     
     (cond [(= totalHeal 4) (render w gameover deadState)]
@@ -862,6 +843,7 @@
 
   ;;;DeadState;;;
   (define (deadScene)
+    (set-gui-frames! gameover 120)
     (render w gameover deadState)
   )
 
@@ -939,10 +921,10 @@
             (restart) (sprite-state washState)]
 
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "c"))
-            (restart) (sprite-state healState)]
+            (restart) (sprite-state gameState)]
 
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "v"))
-            (restart) (sprite-state gameState)]
+            (restart) (sprite-state healState)]
 
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "b"))
             (restart) (sprite-state listenState)]

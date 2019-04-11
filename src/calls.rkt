@@ -15,19 +15,19 @@
 
 (define panda (make-pet petname stats))
 
-;(vector-ref (pet-stats panda) statFood)
-;(vector-ref (pet-stats panda) statWash)
-;(vector-ref (pet-stats panda) statGame)
-;(vector-ref (pet-stats panda) statHeal)
-;(vector-ref (pet-stats panda) statListen)
-;(vector-ref (pet-stats panda) statHappy)
+(vector-ref (pet-stats panda) 0)
+(vector-ref (pet-stats panda) 1)
+(vector-ref (pet-stats panda) 2)
+(vector-ref (pet-stats panda) 3)
+(vector-ref (pet-stats panda) 4)
+(vector-ref (pet-stats panda) 5)
 
-(vector-set! (pet-stats panda) 0 (+ (vector-ref (pet-stats panda) statFood) 1)) ;Food
-(vector-set! (pet-stats panda) 1 (+ (vector-ref (pet-stats panda) statWash) 1)) ;Wash
-(vector-set! (pet-stats panda) 2 (+ (vector-ref (pet-stats panda) statGame) 1)) ;Game
-(vector-set! (pet-stats panda) 3 (+ (vector-ref (pet-stats panda) statHeal) 1)) ;Heal
-(vector-set! (pet-stats panda) 4 (+ (vector-ref (pet-stats panda) statListen) 1)) ;Listen
-(vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) statHappy) 1)) ;Happy
+;(vector-set! (pet-stats panda) 0 (+ (vector-ref (pet-stats panda) statFood) 1)) ;Food
+;(vector-set! (pet-stats panda) 1 (+ (vector-ref (pet-stats panda) statWash) 1)) ;Wash
+;(vector-set! (pet-stats panda) 2 (+ (vector-ref (pet-stats panda) statGame) 1)) ;Game
+;(vector-set! (pet-stats panda) 3 (+ (vector-ref (pet-stats panda) statHeal) 1)) ;Heal
+;(vector-set! (pet-stats panda) 4 (+ (vector-ref (pet-stats panda) statListen) 1)) ;Listen
+;(vector-set! (pet-stats panda) 5 (+ (vector-ref (pet-stats panda) statHappy) 1)) ;Happy
 
 ;(vector-set! (pet-stats panda) 0 10) ;Food
 ;(vector-set! (pet-stats panda) 1 10) ;Wash
