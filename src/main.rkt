@@ -82,7 +82,6 @@
 ;;;;;;;;;;;;;; Structs ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-struct posn (x y))
 (define-struct button (name img x y width height) #:transparent)
 (define-struct gui (name x y state [frames #:mutable] time ui) #:transparent)
 (define-struct sprite (name x y [path   #:mutable] [frames #:mutable] state ext) #:transparent)
@@ -203,20 +202,25 @@
        (bitmap/file (string-append assets "img/ui/" buttonName ".png"))
 )
 
-(define eatButton    (button "Eat"    (getButtonImage "eat")     0 0 75 75))
-(define gameButton   (button "Game"   (getButtonImage "game")    0 0 75 75))
-(define listenButton (button "Listen" (getButtonImage "listen")  0 0 75 75))
-(define healButton   (button "Heal"   (getButtonImage "heal")    0 0 75 75))
-(define washButton   (button "Wash"   (getButtonImage "wash")    0 0 75 75))
-(define sleepButton  (button "Sleep"  (getButtonImage "sleep")   0 0 75 75))
+(define eatButton    (button "Eat"    (getButtonImage "eat")     110 345 50 50))
+(define washButton   (button "Wash"   (getButtonImage "wash")    210 345 50 50))
+(define gameButton   (button "Game"   (getButtonImage "game")    310 345 50 50))
+(define healButton   (button "Heal"   (getButtonImage "heal")    410 345 50 50))
+(define listenButton (button "Listen" (getButtonImage "listen")  510 345 50 50))
+(define sleepButton  (button "Sleep"  (getButtonImage "sleep")   610 345 50 50))
+(define wakeButton   (button "Wake"   (getButtonImage "wake")    340 170 100 100))
 
 (define newGameButton  (button "New Game"
                                (underlay/xy (text "New Game" 15 "black") 0 0
-                                            (rectangle 100 50 "outline" "black")) 0 0 100 50))
+                                            (rectangle 100 50 "outline" "black")) 335 220 100 50))
 
 (define continueButton (button "Continue"
                                (underlay/xy (text "Continue" 15 "black") 0 0
-                                            (rectangle 100 50 "outline" "black")) 0 0 100 50))
+                                            (rectangle 100 50 "outline" "black")) 335 295 100 50))
+
+(define nextButton (button "Next"
+                               (underlay/xy (text "Next" 15 "black") 0 0
+                                            (rectangle 100 50 "outline" "black")) 335 280 100 50))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;; Interface ;;;;;;;;;;;;;;;;;;;;
@@ -288,18 +292,22 @@
 (define (birthUI w)
   (set! background (rectangle 768 432 "solid" "white"))
   (overlay/offset
-     (button-img continueButton) 0 -200 (rectangle 0 0 "outline" "white")
+     (button-img nextButton) 0 -200 (rectangle 0 0 "outline" "white")
   )
 )
 
 (define (sleepUI w)
   (set! background (rectangle 768 432 "solid" "black"))
-  (scale 2 (button-img sleepButton))
+  (scale 0.5 (button-img wakeButton))
 )
 
 (define (renameUI w)
-  (above (text "Ingresa el nombre de tu mascota: " 16 'black)
-         (text (pet-name panda) 24 'black)
+  (overlay/offset
+     (above (text "Ingresa el nombre de tu mascota: " 16 'black)
+          (text (pet-name panda) 24 'black)
+          )
+     0 180
+     (button-img nextButton)
   )
 )
 
@@ -308,16 +316,16 @@
    (overlay/xy 
    (overlay/xy 
    (overlay/xy 
-   (overlay/xy (button-img gameButton)
-               110 0
-               (button-img eatButton))
-               220 0
-               (button-img listenButton))
-               330 0
-               (button-img healButton))
-               440 0
+   (overlay/xy (button-img eatButton)
+               100 0
                (button-img washButton))
-               550 0
+               200 0
+               (button-img gameButton))
+               300 0
+               (button-img healButton))
+               400 0
+               (button-img listenButton))
+               500 0
                (button-img sleepButton)
    )
 )
@@ -424,7 +432,7 @@
 (define title    (gui "Title"    (screenCenterX) (screenCenterY)    1   680 "next"   titleUI))
 (define menu     (gui "Menu"     (screenCenterX) (screenCenterY)    2   120 "pause"  menuUI))
 (define rename   (gui "Rename"   (screenCenterX) (screenCenterY)    3   120 "pause"  renameUI))
-(define birth    (gui "Birth"    (screenCenterX) (screenCenterY)    4   120 "pause"  birthUI))
+(define birth    (gui "Birth"    (screenCenterX) (screenCenterY)    4   120 "next"  birthUI))
 (define sleep    (gui "Sleep"    (screenCenterX) (screenCenterY)    12  600 "pause"  sleepUI))
 (define bars     (gui "Bars"     (screenCenterX) (screenOffsetY 1)  5   420 "idle"   barsUI))
 (define actions  (gui "Actions"  (screenCenterX) (screenCenterY)    5   420 "pause"  actionsUI))
@@ -887,6 +895,7 @@
 
   ;;;EggState;;;
   (define (eggScene)
+     (set-gui-frames! birth 240)
      (vector-set! (pet-stats panda) 0 3)
      (vector-set! (pet-stats panda) 1 3)
      (vector-set! (pet-stats panda) 2 3)
@@ -1010,19 +1019,58 @@
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (click me)
-  
-   (cond [(equal? me "button-down") #t]
-         [else #t]
+(define (isInside? x y button)
+   (cond [(and (>= x (button-x button))
+               (<= x (+ (button-x button) (button-width button)))
+               (>= y (button-y button))
+               (<= y (+ (button-y button) (button-height button)))
+          ) #t
+         ] [else #f]
    )
 )
 
-(define (mouse w x y me)
+(define (click me)
+  (cond [(and (mouse-event? me)(equal? me "button-down")) (write "and Click") #t]
+        [else #f])
+)
 
+(define (mouse w x y me)
+  
   (cond [(equal? debug #t)
          (writeln (string-append  "ME:" me))
          (writeln (string-append  "X:" (number->string x) " Y:" (number->string y)))
-        ]
+        ] [else w]
+  )
+
+  (cond [(mouse=? me "enter") w]
+        [(mouse=? me "leave") w]
+  )
+  
+  (cond [(and (isGUI? w menu) (isInside? x y newGameButton)  (click me))
+         (writeln "Inside New Game") (+ w 1)]
+        [(and (isGUI? w menu) (isInside? x y continueButton) (click me))
+         (writeln "Inside Continue") (+ w 1)]
+        
+        [(and (isInside? x y nextButton) (click me))
+         (writeln "Inside Next") (+ w 1)]
+
+        [(and (isGUI? w actions) (isInside? x y eatButton) (click me))
+         (writeln "Inside EatButton") (sprite-state eatState)]
+        [(and (isGUI? w actions) (isInside? x y washButton) (click me))
+         (writeln "Inside WashButton") (sprite-state washState)]
+        [(and (isGUI? w actions) (isInside? x y gameButton) (click me))
+         (writeln "Inside GameButton") (sprite-state gameState)]
+        [(and (isGUI? w actions) (isInside? x y healButton) (click me))
+         (writeln "Inside HealButton") (sprite-state healState)]
+        [(and (isGUI? w actions) (isInside? x y listenButton) (click me))
+         (writeln "Inside ListenButton") (sprite-state listenState)]
+        [(and (isGUI? w actions) (isInside? x y sleepButton) (click me))
+         (writeln "Inside SleepButton") (gui-state sleep)]
+
+        [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
+         (writeln "Inside WakeButton") (sprite-state idleState)]
+        
+        [else w]
   )
 )
 
@@ -1042,6 +1090,7 @@
                         (not (key=? key "\b"))
                         (not (key=? key "left"))
                         (not (key=? key "right"))
+                        (not (key=? key "escape"))
                         (not (key=? key "f8")))
                    (set-pet-name! panda
                                (string-append (pet-name panda) key))]
@@ -1123,7 +1172,7 @@
 (big-bang 0
   (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
-  ;(on-mouse mouse)
+  (on-mouse mouse)
   ;(state #f)
   (on-key keyboard)
   (name "PandaSushi")
