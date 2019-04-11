@@ -1,3 +1,4 @@
+# ~/tamagotchi/src/scripts/renamerstart.sh "tamagotchi/src/assets/sprites/washmirror" 121
 i=$2
 for file in $(ls -v $USERPROFILE/$1);
 do

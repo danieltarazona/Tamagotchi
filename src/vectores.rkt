@@ -16,28 +16,31 @@
 
 ;;Definí lo que aumenta y disminuye con cada estado;;;;
 
+;nivelComer : 
+; +1 apetito
+; +1 felicidad
+; -1 salud
+; -1 higiene
 
-;nivelComida : +1 apetito
-;              +1 felicidad
-;              -1 salud
-;              -1 higiene
+;nivelJugar :  
+; -1 apetito
+; +1 felicidad
+; +1 salud
+; -1 higiene
+; -1 energia
 
-;nivelJugar :  -1 apetito
-;              +1 felicidad
-;              +1 salud
-;              -1 higiene
-;              -1 energia 
+;nivelCurar :
+; -1 felicidad
+; +1 salud
 
-;nivelSalud :
-;              -1 felicidad
-;              +1 salud
+;nivelBañar :   
+; +2 higiene
 
-;nivelBano :   +2 higiene
-
-;nivelMusica : + 2 la felicidad,
-;              otra vez + 1,
-;               una tercera vez disminuye en 1
-;              -1 salud
+;nivelEscuchar 
+; + 2 la felicidad,
+; otra vez + 1,
+; una tercera vez disminuye en 1
+; -1 salud
 
 ;nivelMuerte: 0 todo
 
