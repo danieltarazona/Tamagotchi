@@ -46,12 +46,12 @@
 
 (define-struct pet ([name #:mutable] stats))
 
-(define eating    #f)
-(define washing   #f)
-(define gaming    #f)
-(define healing   #f)
-(define listening #f)
-(define sleeping  #f)
+(define eating     #f)
+(define washing    #f)
+(define gaming     #f)
+(define healing    #f)
+(define listening  #f)
+(define sleeping   #f)
 
 (define totalEat    0)
 (define totalWash   0)
@@ -284,7 +284,7 @@
   (overlay/offset
      (cond [(equal? pixelate #t)
             (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))]
-           [else (scale 0.75 (bitmap/file (string-append assets "/img/background/title.png"))) ]
+           [else (scale 0.75 (bitmap/file (string-append assets "/img/background/title.png")))]
      )
      0 150
      (overlay/offset
@@ -304,7 +304,10 @@
 
 (define (sleepUI w)
   (set! background (rectangle 768 432 "solid" "black"))
-  (scale 0.5 (button-img wakeButton))
+  (cond [(equal? pixelate #t)
+         (scale 0.5 (bitmap/file (string-append assets "/img/ui/pixelart/wake.png")))]
+        [else (scale 0.5 (button-img wakeButton))]
+  )
 )
 
 (define (renameUI w)
@@ -735,29 +738,32 @@
   
   (define (eatStats)
     (cond [(<= totalEat 3)
-           (set! totalEat (+ totalEat 1))
-           (set! totalWash   0)
-           (set! totalGame   0)
-           (set! totalListen 0)
-           (set! totalHeal   0)
+           (begin
+             (set! totalEat (+ totalEat 1))
+             (set! totalWash   0)
+             (set! totalGame   0)
+             (set! totalListen 0)
+             (set! totalHeal   0))
           ]
     )
     (cond [(= totalEat 1)
-           (addStat 0 1) ;Eat   +1
-           (addStat 5 1) ;Happy +1
-           (subStat 1 1) ;Wash  -1
-           (subStat 3 1) ;Heal  -1
+           (begin
+             (addStat 0 1) ;Eat   +1
+             (addStat 5 1) ;Happy +1
+             (subStat 1 1) ;Wash  -1
+             (subStat 3 1) ;Heal -1
+             (subStat 2 1) ;Game -1
+             (subStat 4 1) ;listen -1
+           ) 
           ]
           [(= totalEat 2)
            (addStat 0 1) ;Eat   +1
-           (subStat 1 1) ;Wash  -1
-           (subStat 3 1) ;Heal  -1
           ]
           [(= totalEat 3)
            (addStat 0 1) ;Eat   +1
-           (subStat 5 1) ;Happy -1
-           (subStat 1 1) ;Wash  -1
-           (subStat 3 1) ;Heal  -1
+           (subStat 5 2) ;Happy -2
+           (subStat 3 (vector-ref stats 3)) ;Heal-all
+           (subStat 1 (vector-ref stats 1)) ;Wash-wash
           ]
      )
   )
@@ -766,23 +772,34 @@
      (cond [(= totalEat 3)(addStat 5 1)])
      
      (cond [(<= totalWash 3)
-            (set! totalWash (+ totalWash 1))
-            (set! totalEat    0)
-            (set! totalGame   0)
-            (set! totalListen 0)
-            (set! totalHeal   0)]
-     )
+            (begin
+              (set! totalWash (+ totalWash 1))
+              (set! totalEat    0)
+              (set! totalGame   0)
+              (set! totalListen 0)
+              (set! totalHeal   0)
+            )
+           ]
+    )
     
      (cond [(= totalWash 1)
-            (addStat 1 2) ;Wash  +2
-            (addStat 5 2) ;Happy +2
+             (begin
+               (addStat 1 2) ;Wash  +2
+               (addStat 5 2) ;Happy +2
+               (subStat 0 1) ;Eat  -1
+               (subStat 3 1) ;Heal -1
+               (subStat 2 1) ;Game -1
+               (subStat 4 1) ;listen -1
+             )
            ]
            [(= totalWash 2)
-            (addStat 1 2) ;Wash  +2
+            (addStat 1 0) ;Wash  +0
            ]
            [(= totalWash 3)
-            (addStat 1 2) ;Wash  +2
-            (subStat 5 1) ;Happy -1
+            (begin
+              (subStat 1 1) ;Wash  -1
+              (subStat 3 (vector-ref stats 3));Heal-all
+            ) ;Heal -1
            ]
      )
   )
@@ -791,30 +808,39 @@
     (cond [(= totalEat 3)(subStat 5 2)])
     
     (cond [(<= totalGame 3)
-           (set! totalGame (+ totalGame 1))
-           (set! totalEat    0)
-           (set! totalWash   0)
-           (set! totalListen 0)
-           (set! totalHeal   0)]
+           (begin
+             (set! totalGame (+ totalGame 1))
+             (set! totalEat    0)
+             (set! totalWash   0)
+             (set! totalListen 0)
+             (set! totalHeal   0)
+            )]
     )
     
     (cond [(= totalGame 1)
-           (addStat 2 1) ;Game  +1
-           (addStat 3 1) ;Heal  +1
-           (addStat 5 2) ;Happy +2
-           (subStat 1 1) ;Wash  -1
+           (begin
+             (addStat 2 1) ;Game  +1 
+             (addStat 5 2) ;Happy +2
+             (subStat 1 1) ;Wash  -1
+             (subStat 3 1) ;Heal -1
+             (subStat 0 1) ;Eat -1
+             (subStat 4 1) ;listen -1
+           )
           ]
           [(= totalGame 2)
-           (addStat 2 1) ;Game  +1
-           (addStat 3 1) ;Heal  +1
-           (addStat 5 1) ;Happy +1
-           (subStat 1 1) ;Wash  -1
+           (begin
+             (addStat 2 1) ;Game  +1
+             (addStat 3 1) ;Heal  +1
+             (addStat 5 1) ;Happy +1
+             (subStat 1 1) ;Wash  -1
+           )
           ]
           [(= totalGame 3)
-           (addStat 2 1) ;Game  +1
-           (addStat 3 1) ;Heal  +1
-           (subStat 1 1) ;Wash  -1
-           (subStat 0 2) ;Eat   -2
+           (begin
+             (addStat 2 1) ;Game  +1
+             (subStat 1 1) ;Wash  -1
+             (subStat 0 2) ;Eat   -2
+           )
           ]
           )
     )
@@ -853,20 +879,31 @@
      )
     
      (cond [(= totalListen 1)
-            (addStat 4 1) ;Listen +1
-            (addStat 5 2) ;Happy  +2
+            (begin
+              (addStat 4 1) ;Listen +1
+              (addStat 5 2) ;Happy  +2
+              (subStat 1 1) ;Wash  -1
+              (subStat 3 1) ;Heal -1
+              (subStat 0 1) ;Eat -1
+              (subStat 2 1) ;Game -1
+             )
            ]
            [(= totalListen 2)
-            (addStat 4 1) ;Listen +1
-            (addStat 5 1) ;Happy  +1
+            (begin
+              (addStat 4 1) ;Listen +1
+              (addStat 5 1) ;Happy  +1
+             )
            ]
-           [(= totalListen 2)
-            (addStat 4 1) ;Listen +1
-            (addStat 5 1) ;Happy  -1
-            (subStat 3 (vector-ref (pet-stats panda) 3)) ;Heal -All
+           [(= totalListen 3)
+            (begin
+              (addStat 4 1) ;Listen +1
+              (addStat 5 1) ;Happy  -1
+              (subStat 3 (vector-ref (pet-stats panda) 3)) ;Heal -All
+            )
            ]
      )
   )
+
 
   ;;;Intro and Music;;;
   (define (introScene)
@@ -1046,33 +1083,33 @@
   )
   
   (cond [(and (isGUI? w menu) (isInside? x y newGameButton)  (click me))
-         (writeln "Inside New Game") (+ w 1)]
+         (writeln "Inside New Game") (restart) (+ w 1)]
         [(and (isGUI? w menu) (isInside? x y continueButton) (click me))
-         (writeln "Inside Continue") (+ w 1)]
+         (writeln "Inside Continue") (restart) (+ w 1)]
         
         [(and (isInside? x y nextButton) (click me))
-         (writeln "Inside Next") (+ w 1)]
+         (writeln "Inside Next") (restart) (+ w 1)]
 
         [(and (isGUI? w actions) (isInside? x y eatButton) (click me))
-         (writeln "Inside EatButton") (sprite-state eatState)]
+         (writeln "Inside EatButton")    (restart) (sprite-state eatState)]
         [(and (isGUI? w actions) (isInside? x y washButton) (click me))
-         (writeln "Inside WashButton") (sprite-state washState)]
+         (writeln "Inside WashButton")   (restart) (sprite-state washState)]
         [(and (isGUI? w actions) (isInside? x y gameButton) (click me))
-         (writeln "Inside GameButton") (sprite-state gameState)]
+         (writeln "Inside GameButton")   (restart) (sprite-state gameState)]
         [(and (isGUI? w actions) (isInside? x y healButton) (click me))
-         (writeln "Inside HealButton") (sprite-state healState)]
+         (writeln "Inside HealButton")   (restart) (sprite-state healState)]
         [(and (isGUI? w actions) (isInside? x y listenButton) (click me))
-         (writeln "Inside ListenButton") (sprite-state listenState)]
+         (writeln "Inside ListenButton") (restart) (sprite-state listenState)]
         [(and (isGUI? w actions) (isInside? x y sleepButton) (click me))
-         (writeln "Inside SleepButton") (gui-state sleep)]
+         (writeln "Inside SleepButton")  (restart) (gui-state sleep)]
 
-        [(and (isGUI? w actions) (equal? me "leave")) (gui-state sleep)]
+        [(and (isGUI? w actions) (equal? me "leave")) (restart) (gui-state sleep)]
 
         [(and (isGUI? w gameover) (isInside? x y backButton) (click me))
-         (writeln "Inside BackButton") (gui-state menu)]
+         (writeln "Inside BackButton") (restart) (gui-state menu)]
 
         [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
-         (writeln "Inside WakeButton") (sprite-state idleState)]
+         (writeln "Inside WakeButton") (restart) (sprite-state idleState)]
         
         [else w]
   )

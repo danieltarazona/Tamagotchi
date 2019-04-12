@@ -233,7 +233,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (debugUI w)
-  
+
   (above (if showGUIName
              (text (string-append "GUI: "     (gui-name actualGUI))       12 "black")
                 (text "" 10 "black"))
@@ -260,7 +260,7 @@
          (if (not (empty? lastAction))
               (text (string-append "LastAction: " (sprite-name lastAction)) 12 "black")
                 (text "" 10 "black"))
-        
+
   )         
 )
 
@@ -284,7 +284,7 @@
   (overlay/offset
      (cond [(equal? pixelate #t)
             (scale 0.75 (bitmap/file (string-append assets "/img/background/title-pixel.png")))]
-           [else (scale 0.75 (bitmap/file (string-append assets "/img/background/title.png")))]
+           [else (scale 0.75 (bitmap/file (string-append assets "/img/background/title.png"))) ]
      )
      0 150
      (overlay/offset
@@ -304,9 +304,7 @@
 
 (define (sleepUI w)
   (set! background (rectangle 768 432 "solid" "black"))
-  (cond [(equal? pixelate #t) (scale 0.5 (bitmap/file (string-append assets "/img/ui/pixelart/wake.png")))) 
-        [else (scale 0.5 (button-img wakeButton))]
-  )
+  (scale 0.5 (button-img wakeButton))
 )
 
 (define (renameUI w)
@@ -390,7 +388,7 @@
                     (rectangle 100  20 "outline" "black"))
                    )
       )
-     
+
     440 0
     (overlay/xy
      (text
@@ -584,7 +582,7 @@
 )
 
 (define (drawSprite w sprite)
-        
+
   (cond [(equal? (sprite-name sprite) "Empty") empty-image]
         [else (set-sprite-path! sprite (spritePath sprite))
               (cond [(= count (sprite-frames sprite)) (setZeroCount)])
@@ -631,36 +629,56 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay Helper ;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;------------------------------------------------------------------------------------------------------------
+;Esta defincion posee como funcion encender el audio, en determinadas partes del video-juego.
 (define (onMusicPlayer)
    (cond [(equal? musicPlayer #f) (set! musicPlayer #t)])
 )
-
+;------------------------------------------------------------------------------------------------------------
+;Esta definicion posee como funcion apagar el audio, para asi hacer que este se detenga.
 (define (offMusicPlayer)
    (cond [(equal? musicPlayer #t) (set! musicPlayer #f)])
 )
-
+;------------------------------------------------------------------------------------------------------------
+;Esta definicion hace el cambio automatico, si esta apagado lo prende y si esta prendio, apaga el audio.
 (define (onOffMusicPlayer)
    (cond [(equal? musicPlayer #f) (set! musicPlayer #t)]
          [else (set! musicPlayer #f)]
    )
 )
+;------------------------------------------------------------------------------------------------------------
+;Contrato: stopSprite: num -> num
 
+;Proposito: Esta funcion cumple con detener el sprite justo en el sprite antes del ingresado.
+
+;Ejemplo:
+;(stopSprite 120);119
+
+;Cuerpo:
 (define (stopSprite sprite)
    (cond [(>= countGUI (sprite-frames sprite))
           (set! count (- (sprite-frames sprite) 1))
          ]
    )
 )
+;------------------------------------------------------------------------------------------------------------
+;Contrato: stopGUI: num -> num
 
+;Proposito: Esta funcion cumple con detener la animacion del gui justo en el gui ingresado.
+
+;Ejemplo:
+;(stopGUI 320); 320
+
+;Cuerpo:
 (define (stopGUI gui)
    (cond [(>= countGUI (gui-frames gui))
           (set! countGUI (gui-frames gui))
          ]
    )
 )
-
+;------------------------------------------------------------------------------------------------------------
+;Esta definicion cambia a cero (0) todas las estadisticas de la mascota.
 (define (setZeroStats pet)
   (vector-set! (pet-stats pet) 0 0)
   (vector-set! (pet-stats pet) 1 0)
@@ -669,7 +687,10 @@
   (vector-set! (pet-stats pet) 4 0)
   (vector-set! (pet-stats pet) 5 0)
 )
-
+;-------------------------------------------------------------------------------------------------------------
+;Contrato: isDead?: pet -> boolean
+;Proposito: Esta funcion cumple con el fin de evaluar cuando la mascota esta muerta de acuerdo a sus estadisticas
+;Cuerpo:
 (define (isDead? pet)
    (cond [(and (= (vector-ref (pet-stats pet) 0) 0)
                (= (vector-ref (pet-stats pet) 1) 0)
@@ -680,52 +701,103 @@
          [else #f]
    )
 )
+;---------------------------------------------------------------------------------------------------------------
+;Contrato: addStat: num num -> num
 
+;Proposito: Esta funcion tiene como objetivo sumar un numero dado (x) a la posicion (pos) del vector que contiene
+;las estadisticas de la mascota.
+
+;Ejemplos:
+;(addStat 0 1) ;Eat    +1
+;(addStat 1 2) ;Wash   +2
+;(addStat 2 1) ;Game   +1
+;(addStat 3 1) ;Heal   +1
+;(addStat 4 1) ;listen +1
+;(addStat 5 1) ;Happy  +1
+
+;Cuerpo:
 (define (addStat pos x)
   (cond [(and (>= pos 0) (< pos 5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 9))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
 
         [(and (>= pos 0) (< pos 5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 8))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (= pos  5) (= x 1) (<= (vector-ref (pet-stats panda) pos) 9))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (= pos  5) (= x 2) (<= (vector-ref (pet-stats panda) pos) 8))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
 
         [(and (= pos  5) (= x 3) (<= (vector-ref (pet-stats panda) pos) 7))
          (vector-set! (pet-stats panda) pos (+ (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (= pos  5) (= (vector-ref (pet-stats panda) pos) 10))
          (vector-set! (pet-stats panda) pos 10)]
         )
 )
+;--------------------------------------------------------------------------------------------------------------
+;Contrato: subStat: num num -> num
 
+;Proposito: Esta funcion tiene como objetivo restar un numero dado (x) a la posicion (pos) del vector que contiene
+;las estadisticas de la mascota.
+
+;Ejemplos:
+;(subStat 0 1) ;Eat    -1
+;(subStat 1 2) ;Wash   -2
+;(subStat 2 1) ;Game   -1
+;(subStat 3 1) ;Heal   -1
+;(subStat 4 1) ;listen -1
+;(subStat 5 1) ;Happy  -1
+
+;Cuerpo:
 (define (subStat pos x)
   (cond [(and (>= pos 0) (< pos 5) (= x 2) (>= (vector-ref (pet-stats panda) pos) 1))
          (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (>= pos 0) (< pos 5) (= x 1) (>= (vector-ref (pet-stats panda) pos) 1))
          (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (= pos  5) (= x 1) (>= (vector-ref (pet-stats panda) pos) 4))
          (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) 5) x))]
-        
+
         [(and (= pos  5) (= x 2) (>= (vector-ref (pet-stats panda) pos) 5))
          (vector-set! (pet-stats panda) pos (- (vector-ref (pet-stats panda) pos) x))]
-        
+
         [(and (= pos  5) (= (vector-ref (pet-stats panda) pos) 3))
          (vector-set! (pet-stats panda) pos 3)]
         )
 )
-
+;--------------------------------------------------------------------------------------------------------------------
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Gameplay ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Contrato: gameplay: num -> scene
 
+;Proposito: La funcion gameplay es la cual ejecuta todas las escenas posibles,dependiendo de unas condiciones
+;que estan definidas dentro de la misma funcion. Esta recibe un  numero (w) y dependiendo de este numero
+;genera una escena.
+
+;Ejemplos:
+;(gameplay 0); introScene
+;(gameplay 1); titleScene
+;(gameplay 2); menuScene
+;(gameplay 3); renamescene
+;(gameplay 4); eggScene
+;(gameplay 5); idleScene
+;(gameplay 6); eatScene
+;(gameplay 7); listenScene
+;(gameplay 8); healScene
+;(gameplay 9); washScene
+;(gameplay 10); gameScene
+;(gameplay 11); deadScene
+;(gameplay 12); sleepScene
+
+;Cuerpo:        
 (define (gameplay w)
-
+ ;---------------------------------------------------------------------------------------------------
+ ;Proposito: esta funcion tiene como objetivo restar uno (1) a cada estado del pandasushi
+ ; despues de un tiempo determinado, y es usada cuando la mascota esta en estado de resposo (idleState).
   (define (lifeStats)
      (subStat 0 1)
      (subStat 1 1)
@@ -734,7 +806,9 @@
      (subStat 4 1)
      (subStat 5 1)
   )
-  
+ ;-----------------------------------------------------------------------------------------------------
+ ;Proposito: esta funcion tiene como fin evaluar cuantas veces se ha hecho la misma accion (comer) de seguido
+ ; y asi mismo ejecutar las condiciones que conlleva cada repeticion.
   (define (eatStats)
     (cond [(<= totalEat 3)
            (begin
@@ -745,6 +819,7 @@
              (set! totalHeal   0))
           ]
     )
+;Si come una vez, le suma uno (1) a Eat y Happy, mientras que le resta uno (1) al resto de estados.
     (cond [(= totalEat 1)
            (begin
              (addStat 0 1) ;Eat   +1
@@ -755,21 +830,25 @@
              (subStat 4 1) ;listen -1
            ) 
           ]
+ ;Si come dos veces de seguido, tan solo se le añadira uno (1) a Eat.
           [(= totalEat 2)
            (addStat 0 1) ;Eat   +1
           ]
+ ;Si come tres veces de seguido, le aumentara uno (1) en Eat mientras que le restara dos (2) a Happy, lo enferma y lo ensucia.
           [(= totalEat 3)
            (addStat 0 1) ;Eat   +1
            (subStat 5 2) ;Happy -2
            (subStat 3 (vector-ref stats 3)) ;Heal-all
-           (subStat 1 (vector-ref stats 1)) ;Wash-wash
+           (subStat 1 (vector-ref stats 1)) ;Wash-all
           ]
      )
   )
-  
+;---------------------------------------------------------------------------------------------------------------
+;Proposito: esta funcion tiene como fin evaluar cuantas veces se ha hecho la misma accion (bañar) de seguido
+; y asi mismo ejecutar las condiciones que conlleva cada repeticion.
   (define (washStats)
      (cond [(= totalEat 3)(addStat 5 1)])
-     
+
      (cond [(<= totalWash 3)
             (begin
               (set! totalWash (+ totalWash 1))
@@ -780,7 +859,8 @@
             )
            ]
     )
-    
+;Si se manda al baño una vez, se le suma dos (2) a Wash y Happy mientras que se le resta
+; uno (1) a cada uno de los otros estados.
      (cond [(= totalWash 1)
              (begin
                (addStat 1 2) ;Wash  +2
@@ -791,21 +871,25 @@
                (subStat 4 1) ;listen -1
              )
            ]
+;Si se baña dos veces de seguido, no hace ningun cambio.
            [(= totalWash 2)
             (addStat 1 0) ;Wash  +0
            ]
+;Si se baña tres veces de seguido, se le resta uno (1) a Wash y lo enferma.
            [(= totalWash 3)
             (begin
               (subStat 1 1) ;Wash  -1
               (subStat 3 (vector-ref stats 3));Heal-all
-            ) ;Heal -1
+             ) 
            ]
      )
   )
-
+;---------------------------------------------------------------------------------------------------------------------
+;;Proposito: esta funcion tiene como fin evaluar cuantas veces se ha hecho la misma accion (jugar) de seguido
+; y asi mismo ejecutar las condiciones que conlleva cada repeticion.
   (define (gameStats)
     (cond [(= totalEat 3)(subStat 5 2)])
-    
+
     (cond [(<= totalGame 3)
            (begin
              (set! totalGame (+ totalGame 1))
@@ -815,7 +899,7 @@
              (set! totalHeal   0)
             )]
     )
-    
+;Si juega una vez, se le suma uno (1) a Game y dos (2) a Happy, mientras que se le resta uno (1) al resto de estados.
     (cond [(= totalGame 1)
            (begin
              (addStat 2 1) ;Game  +1 
@@ -826,6 +910,7 @@
              (subStat 4 1) ;listen -1
            )
           ]
+;Si juegan dos veces de seguido, se le suma uno (1) a Game, Heal, y Happy, mientras que se le resta uno (1) a Wash.
           [(= totalGame 2)
            (begin
              (addStat 2 1) ;Game  +1
@@ -834,6 +919,7 @@
              (subStat 1 1) ;Wash  -1
            )
           ]
+;Si juegan tres veces de seguido, se le suma uno (1) a Game y se le resta uno (1) a Wash y dos (2) a Eat.
           [(= totalGame 3)
            (begin
              (addStat 2 1) ;Game  +1
@@ -843,10 +929,12 @@
           ]
           )
     )
-     
+;-------------------------------------------------------------------------------------------------------------------
+;;Proposito: esta funcion tiene como fin evaluar cuantas veces se ha hecho la misma accion (curar) de seguido
+; y asi mismo ejecutar las condiciones que conlleva cada repeticion.  
   (define (healStats)
     (cond [(= totalEat 3)(subStat 5 2)])
-    
+
     (cond [(<= totalHeal 3)
            (set! totalHeal (+ totalHeal 1))
            (set! totalEat    0)
@@ -856,16 +944,16 @@
            (addStat 3 1) ;Heal  +1
            ]
     )
-
+;Si se cura una vez, se suma uno (1) a Heal y tres (3) a Happy.
     (cond [(= totalHeal 1)
             (addStat 5 3) ;Happy +3
           ]
+;No ocurre nada si se cura menos de tres veces de seguido.
     )
-    
-    
-    
-  )
-
+ )
+;-----------------------------------------------------------------------------------------------------------------------
+;;Proposito: esta funcion tiene como fin evaluar cuantas veces se ha hecho la misma accion (escuchar musica) de seguido
+; y asi mismo ejecutar las condiciones que conlleva cada repeticion.
   (define (listenStats)
      (cond [(= totalEat 3)(subStat 5 2)])
      (cond [(<= totalListen 3)
@@ -876,7 +964,7 @@
             (set! totalGame   0)
            ]
      )
-    
+;Si escucha musica una vez, suma uno (1) a Listen y dos (2) a Happy, mientras que le resta uno (1) al resto de estados.
      (cond [(= totalListen 1)
             (begin
               (addStat 4 1) ;Listen +1
@@ -887,12 +975,14 @@
               (subStat 2 1) ;Game -1
              )
            ]
+;Si se escucha musica dos veces seguidas, suma uno (1) a Listen y Happy.
            [(= totalListen 2)
             (begin
               (addStat 4 1) ;Listen +1
               (addStat 5 1) ;Happy  +1
              )
            ]
+;Si se escucha musica tres veces seguidas, suma uno (1) a listen, le resta uno (1) a Happy y enferma a la mascota
            [(= totalListen 3)
             (begin
               (addStat 4 1) ;Listen +1
@@ -902,39 +992,59 @@
            ]
      )
   )
-
-
-  ;;;Intro and Music;;;
-  (define (introScene)
+;-------------------------------------------------------------------------------------------------------------------------
+;;;Intro and Music;;;
+  
+;introScene, hace parte de la interfaz grafica del videojuego, es la primera escena que aparece y lo que hace es llamar
+;a (render w intro emptystate) que es la encargada de dibujar, mientras enciende el audio elegido para la introduccion
+;del videojuego.
+  
+(define (introScene)
      (cond [(equal? musicPlayer #f)
             (onMusicPlayer) 
-            ;(play-sound introSong #t)
+            ;(play-sound introSong #t) ;funciona en Windows, linux paila.
         ]
      )
      (render w intro emptyState)
   )
-
-  ;;;Title;;;
-  (define (titleScene)
+;--------------------------------------------------------------------------------------------------------------------------
+;;;Title;;;
+  
+;titleScene, es la segunda escena del videojuego y cumple con hacer el llamado de (render w title emptystate) que dibuja
+;el titulo del juego.
+  
+(define (titleScene)
      (render w title emptyState)
   )
+;---------------------------------------------------------------------------------------------------------------------------------------
+;;;Menu;;;
 
-  ;;;Menu;;;
-  (define (menuScene)
+;menuScene, es la tercera escena del videojuego y cumple con llamar a (render w menu emptyState) que dibuja el primer menu del juego,
+;y detener el audio.
+  
+(define (menuScene)
      (cond [(equal? musicPlayer #t)
             (offMusicPlayer)
            ]
      )
      (render w menu emptyState)
   )
-
-  ;;;Rename;;;
-  (define (renameScene)
+;----------------------------------------------------------------------------------------------------------------------------------------
+;;;Rename;;;
+  
+;renameScene,es la cuarta escena del videojuego y cumple con llamar a (render w rename emptyState) que dibuja la opcion para que
+; el usuario digite el nombre de su mascota.
+  
+(define (renameScene)
      (render w rename emptyState)
   )
+;----------------------------------------------------------------------------------------------------------------------------------------
+;;;EggState;;;
 
-  ;;;EggState;;;
-  (define (eggScene)
+;eggScene, es la quinta escena y es la encargarda de otorgar los valores iniciales de las estadisticas de la mascota y llamar a
+; (render w birth eggState) que a su vez, se encarga de dibujar esta escena.
+  
+(define (eggScene)
      (set-gui-frames! birth 240)
      (vector-set! (pet-stats panda) 0 3)
      (vector-set! (pet-stats panda) 1 3)
@@ -944,9 +1054,13 @@
      (vector-set! (pet-stats panda) 5 3)
      (render w birth eggState)
   )
+;----------------------------------------------------------------------------------------------------------------------------------------------
+;;;IdleState and Lifetime;;;
 
-  ;;;IdleState and Lifetime;;;
-  (define (idleScene)
+;idleScene, es la encargada de generar la escena en la que se muestran todas las estadisticas de la mascota y tambien en esta se muestra
+;todas las acciones que el usuario puede acceder. En si, esta es el estado de reposo.
+  
+(define (idleScene)
      (cond [(= life 18000) (lifeStats) (setZeroLife)])
      (cond [(isDead? panda)(deadScene)]
            [else (set! eating    #f)
@@ -963,29 +1077,44 @@
            ]
      )
   )
+;-------------------------------------------------------------------------------------------------------------------------------------------------
+;;;EatState;;;
 
-  ;;;EatState;;;
-  (define (eatScene)
+;eatScene, es la encargada de generar la escena en la que la mascota esta comiendo por ende pasa de estado de reposo (idleState) al estado de comida,
+;tambien posee la condicion de que si se hace esta misma accion cuatro veces seguidas la mascota morira,
+;y si es asi, se genera la escena donde la mascota muere.
+  
+(define (eatScene)
     (set-gui-frames! bars 240)
     (cond [(equal? eating #f) (eatStats) (set! eating #t)])
-    
+
     (cond [(= totalEat 4) (deadScene)]
           [else (lifetime) (render w bars eatState)]
     )
   )
+;-----------------------------------------------------------------------------------------------------------------------------------------------------
+;;;WashState;;;
 
-  ;;;WashState;;;
-  (define (washScene)
+;washScene, es la encargada de generar la escena en la que la mascota se esta bañado por ende pasa de estado de reposo (idleState) al estado de baño,
+;tambien posee la condicion de que si se hace esta misma accion cuatro veces seguidas la mascota morira,
+; y si es asi, se genera la escena donde la mascota muere.
+  
+(define (washScene)
     (set-gui-frames! bars 420)
     (cond [(equal? washing #f) (washStats) (set! washing #t)])
-    
+
     (cond [(= totalWash 4) (deadScene)]
           [else (lifetime) (render w bars washState)]
     )
   )
+;---------------------------------------------------------------------------------------------------------------------------------------------------
+;;;ListenState;;;
 
-  ;;;ListenState;;;
-  (define (listenScene)
+;listenScene, es la encargada de generar la escena en la que la mascota esta escuchando musica por ende pasa de estado de reposo
+;(idleState) al estado de escuchar musica, tambien posee la condicion de que si se hace esta misma accion cuatro veces seguidas la mascota morira,
+;y si es asi, se genera la escena donde la mascota muere.
+  
+(define (listenScene)
     (set-gui-frames! bars 420)
 
     (cond [(and (equal? eating #f) (equal? musicPlayer #f)) 
@@ -995,50 +1124,70 @@
            ;(play-sound listenSong #t)
           ]
     )
-    
+
     (cond [(= totalListen 4) (deadScene)]
           [else (lifetime)(render w bars listenState)]            
     ) 
   )
+;--------------------------------------------------------------------------------------------------------------------------------------------
+;;;GameState;;;
 
-  ;;;GameState;;;
-  (define (gameScene)
+;gameScene, es la encargada de generar la escena en la que la mascota esta jugando por ende pasa de estado de reposo (idleState) al estado de jugar,
+;tambien posee la condicion de que si se hace esta misma accion cuatro veces seguidas la mascota morira,
+;y si es asi, se genera la escena donde la mascota muere.
+  
+(define (gameScene)
     (set-gui-frames! bars 420)
     (cond [(equal? gaming #f) (gameStats) (set! gaming #t)])
-    
+
     (cond [(= totalGame 4) (deadScene)]
           [else (lifetime) (render w bars gameState)]
     )
   )
+;---------------------------------------------------------------------------------------------------------------------------------------------
+;;;HealState;;;
 
-  ;;;HealState;;;
+;healScene, es la encargada de generar la escena en la que la mascota se cura por ende pasa de estado de reposo (idleState) al estado de cura,
+;tambien posee la condicion de que si se hace esta misma accion cuatro veces seguidas la mascota morira.
+;y si es asi, se genera la escena donde la mascota muere.
+  
   (define (healScene)
     (set-gui-frames! bars 240)
     (cond [(equal? healing #f) (healStats) (set! healing #t)])
-    
+
     (cond [(= totalHeal 4) (deadScene)]
           [else (lifetime) (render w bars healState)]
     )
   )
+;------------------------------------------------------------------------------------------------------------------------------------------------------
+;;;SleepState;;;
 
-  ;;;SleepState;;;
-  (define (sleepScene)
+;eatScene, es la encargada de generar la escena en la que la mascota esta durmiendo por ende pasa de estado de reposo (idleState) al estado de dormir.
+  
+(define (sleepScene)
     (cond [(equal? sleeping #f) (set! sleeping #t)])
     (lifetime)
     (render w sleep emptyState)
   )
+;--------------------------------------------------------------------------------------------------------------------------------------------------------
+;;;DeadState;;;
 
-  ;;;DeadState;;;
-  (define (deadScene)
+;deadScene, es la encargada de generar la escena en la que la mascota muerde debido a ciertas condiciones antes especificadas.
+  
+(define (deadScene)
     (set-gui-frames! gameover 120)
     (setZeroStats panda)
     (stopGUI gameover)
     (stopSprite deadState)
     (render w gameover deadState)
   )
-  
-  ;;;Logic;;;
-  (cond [(= w (gui-state    intro))       (introScene)]  ;0
+;--------------------------------------------------------------------------------------------------------------------------------------------------------
+;;;Logic;;;
+
+;estas son las series de condiciones que me comparan el dato de entrada (w) de la funcion, con el estado de cada una de las escenas y dependiendo de esto
+;genera una u otra scena.
+ 
+(cond   [(= w (gui-state    intro))       (introScene)]  ;0
         [(= w (gui-state    title))       (titleScene)]  ;1
         [(= w (gui-state    menu))        (menuScene)]   ;2
         [(= w (gui-state    rename))      (renameScene)] ;3
@@ -1053,11 +1202,16 @@
         [(= w (gui-state    sleep))       (sleepScene)]  ;12
   )
 )
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Mouse Event Handlers ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;-----------------------------------------------------------------------------------------------------------------------------------------
+;Contrato: isInside?: number number button -> boolean
 
+;Proposito: La finalidad de esta funcion consiste en verificar si el mouse esta dentro de un boton del viejojuego
+
+;Cuerpo:
 (define (isInside? x y button)
    (cond [(and (>= x (button-x button))
                (<= x (+ (button-x button) (button-width button)))
@@ -1067,25 +1221,38 @@
          ] [else #f]
    )
 )
+;----------------------------------------------------------------------------------------------------------------------------------
+;Contrato: clicl: mouse-event -> boolean
 
+;Proposito: La finalidad de esta funcion esta en tener la opcion de dar click (accion) dentro de la pantalla de juego
+
+;Cuerpo:
 (define (click me)
   (cond [(and (mouse-event? me)(equal? me "button-down")) "Click " #t]
         [else #f])
 )
+;-----------------------------------------------------------------------------------------------------------------------------------
+;Contrato: mouse -> num num num mouse-event -> string or number
 
+;Proposito: La finalidad de esta funcion consiste en que si esta activo el modo "debug" mostrar en que posicion esta el mouse
+;y mostrar tambien que accion esta haciendo. Aparte de esto es la que le permite al usuario interactuar con los diferentes
+;botones del juego, ya que permite poder accionar cada uno de estos. Si el mouse no esta dentro de la ventana, inmediatamente
+;la mascota estara el estado dormir.
+
+;Cuerpo:
 (define (mouse w x y me)
-  
+
   (cond [(equal? debug #t)
          (writeln (string-append  "ME:" me))
          (writeln (string-append  "X:" (number->string x) " Y:" (number->string y)))
         ] [else w]
   )
-  
+
   (cond [(and (isGUI? w menu) (isInside? x y newGameButton)  (click me))
          (writeln "Inside New Game") (+ w 1)]
         [(and (isGUI? w menu) (isInside? x y continueButton) (click me))
          (writeln "Inside Continue") (+ w 1)]
-        
+
         [(and (isInside? x y nextButton) (click me))
          (writeln "Inside Next") (+ w 1)]
 
@@ -1109,7 +1276,7 @@
 
         [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
          (writeln "Inside WakeButton") (sprite-state idleState)]
-        
+
         [else w]
   )
 )
@@ -1118,6 +1285,17 @@
 ;;;;;;;;;; Keyboard Event Handlers ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;Contrato: keyboard: num key-event -> num or string
+
+;Proposito: La finalidad de esta funcion consiste en que si esta en modo debug muestra en la consola la tecla que se unde.
+;Tambien es la que le permite al usuario escribir el nombre que desea otorgarle a su mascota. Por otro lado posee funciones como:
+;-Mientras esta en el modo debug se puede ir de un estado al otro tan solo con las flechas del teclado.
+;-Es  otra manera de que el usuario interactue con el juego mientras esta jugando.
+;-Permite activar el modo debug con la tecla F8
+;-Permite volver al principio del juego con la tecla F5
+;-Permmite despixelar el juego con la tecla P
+
+;Cuerpo:
 (define (keyboard w key)
 
   (cond [(equal? debug #t) (writeln (string-append "Key: " key))])
@@ -1145,7 +1323,7 @@
 
         [(and (isGUI? w actions) (not (isGUI? w rename)) (key=? key "z"))
             (restart) (sprite-state eatState)]
-        
+
         [(and (isGUI? w actions) (not (isGUI? w rename))  (key=? key "x"))
             (restart) (sprite-state washState)]
 
@@ -1182,9 +1360,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Engine ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;Contrato: engine: num -> num
 
+;Proposito: engine es la funcion que permite avanzar de un estado a otro con la funcion "next",
+;tambien permite pausar las escenas con la funcion "pause". Por otro lado tiene la funcion "goto"
+;que es la que nos permite dirigirnos a un sprite en especifico.
+
+;Cuerpo:
 (define (engine w)
-  
+
    (define (next w)
      (+ w 1)
    )
@@ -1209,6 +1393,7 @@
 ;;;;;;;;;;;;;;; Main ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;Proposito: esta funcion es la que hace uso de todas las funciones anteriores, para asi hacer posible el videojuego.
 (big-bang 0
   (on-tick engine (framerate)) ; Framelimit
   (to-draw gameplay screenWidth screenHeight)
@@ -1217,4 +1402,3 @@
   (on-key keyboard)
   (name "PandaSushi")
 )
-
