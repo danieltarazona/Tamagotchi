@@ -1,11 +1,11 @@
 echo "Creating the executable..."
 cd $USERPROFILE/tamagotchi/src
 echo "Building..."
-rm -rf build
-mkdir $USERPROFILE/tamagotchi/src/build
+rm -rf $USERPROFILE/tamagotchi/build
+mkdir $USERPROFILE/tamagotchi/build
 raco exe --gui -v $USERPROFILE/tamagotchi/src/main.rkt
-mv $USERPROFILE/tamagotchi/src/main.exe build/
-cd $USERPROFILE/tamagotchi/src/build
+mv $USERPROFILE/tamagotchi/src/main.exe $USERPROFILE/tamagotchi/build/
+cd $USERPROFILE/tamagotchi/build
 echo "Making a standalone distribution..."
 raco distribute pandasushi main.exe
 # rm $USERPROFILE/tamagotchi/src/build/main.exe
