@@ -13,6 +13,7 @@ mv main.exe PandaSushi.exe
 echo "Making a zipfile for the distribution..."
 zip -r PandaSushi pandasushi
 rm -rf pandasushi
+rm PandaSushi.exe
 if [ ! -f pandasushi.zip ]; then
     echo "Failed!"
     exit 1

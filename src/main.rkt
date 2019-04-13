@@ -1083,33 +1083,49 @@
   )
   
   (cond [(and (isGUI? w menu) (isInside? x y newGameButton)  (click me))
-         (writeln "Inside New Game") (restart) (+ w 1)]
+         (cond [(equal? debug #t) (writeln "Inside New Game Button")])
+         (restart) (+ w 1)]
         [(and (isGUI? w menu) (isInside? x y continueButton) (click me))
-         (writeln "Inside Continue") (restart) (+ w 1)]
+         (cond [(equal? debug #t) (writeln "Inside Continue Button")])
+         (restart) (+ w 1)]
         
         [(and (isInside? x y nextButton) (click me))
-         (writeln "Inside Next") (restart) (+ w 1)]
+         (cond [(equal? debug #t) (writeln "Inside Next Button")])
+         (restart) (+ w 1)]
 
         [(and (isGUI? w actions) (isInside? x y eatButton) (click me))
-         (writeln "Inside EatButton")    (restart) (sprite-state eatState)]
+         (cond [(equal? debug #t) (writeln "Inside Eat Button")])
+         (restart) (sprite-state eatState)]
+        
         [(and (isGUI? w actions) (isInside? x y washButton) (click me))
-         (writeln "Inside WashButton")   (restart) (sprite-state washState)]
+         (cond [(equal? debug #t) (writeln "Inside Wash Button")])
+         (restart) (sprite-state washState)]
+        
         [(and (isGUI? w actions) (isInside? x y gameButton) (click me))
-         (writeln "Inside GameButton")   (restart) (sprite-state gameState)]
+         (cond [(equal? debug #t) (writeln "Inside Game Button")])
+         (restart) (sprite-state gameState)]
+        
         [(and (isGUI? w actions) (isInside? x y healButton) (click me))
-         (writeln "Inside HealButton")   (restart) (sprite-state healState)]
+         (cond [(equal? debug #t) (writeln "Inside Heal Button")])
+         (restart) (sprite-state healState)]
+        
         [(and (isGUI? w actions) (isInside? x y listenButton) (click me))
-         (writeln "Inside ListenButton") (restart) (sprite-state listenState)]
+         (cond [(equal? debug #t) (writeln "Inside Listen Button")])
+         (restart) (sprite-state listenState)]
+        
         [(and (isGUI? w actions) (isInside? x y sleepButton) (click me))
-         (writeln "Inside SleepButton")  (restart) (gui-state sleep)]
+         (cond [(equal? debug #t) (writeln "Inside Sleep Button")])
+         (restart) (gui-state sleep)]
 
         [(and (isGUI? w actions) (equal? me "leave")) (restart) (gui-state sleep)]
 
         [(and (isGUI? w gameover) (isInside? x y backButton) (click me))
-         (writeln "Inside BackButton") (restart) (gui-state menu)]
+         (cond [(equal? debug #t) (writeln "Inside Back Button")])
+         (restart) (gui-state menu)]
 
         [(and (isGUI? w sleep) (isInside? x y wakeButton) (click me))
-         (writeln "Inside WakeButton") (restart) (sprite-state idleState)]
+         (cond [(equal? debug #t) (writeln "Inside Wake Button")])
+         (restart) (sprite-state idleState)]
         
         [else w]
   )
