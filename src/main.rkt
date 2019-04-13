@@ -1,5 +1,14 @@
 #lang racket
 
+;Santiago Bohorquez cód 
+;Valentina Salamanca cód 
+;Daniel Tarazona cód 1842427
+
+;Leer los comentarios en los archivos comentariosSantiago y comentariosValentina
+;
+;Proyecto Final
+;Abril 2019
+
 (require 2htdp/universe)
 (require 2htdp/image)
 (require 2htdp/image
@@ -1119,7 +1128,7 @@
 
         [(and (isGUI? w actions) (equal? me "leave")) (restart) (gui-state sleep)]
 
-        [(and (isGUI? w gameover) (isInside? x y backButton) (click me))
+        [(and (equal? (sprite-name deadState) "Dead") (isInside? x y backButton) (click me))
          (cond [(equal? debug #t) (writeln "Inside Back Button")])
          (restart) (gui-state menu)]
 
